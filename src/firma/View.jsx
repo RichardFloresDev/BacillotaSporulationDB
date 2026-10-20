@@ -273,17 +273,17 @@ export default function View(v) {
       {v.isHome ? (
         <>
           {"\n    "}
-          <div style={S("overflow:auto;background:var(--bg)")}>
+          <div style={S("overflow:auto;background:var(--bg);font-size:14.62px")}>
             {"\n      "}
             <section style={S("background:var(--hero);color:var(--ink);position:relative;overflow:hidden;min-height:100%;display:flex;flex-direction:column;transition:background .3s")}>
               {"\n        "}
               {I(v.heroNet)}
               {"\n        "}
-              <div style={S("position:relative;flex:1;width:100%;max-width:1240px;margin:0 auto;padding:72px 32px 48px;display:flex;flex-direction:column;justify-content:center;gap:40px")}>
+              <div style={S("position:relative;flex:1;width:100%;max-width:1395px;margin:0 auto;padding:81px 36px 54px;display:flex;flex-direction:column;justify-content:center;gap:45px")}>
                 {"\n          "}
-                <div style={S("display:flex;flex-direction:column;gap:28px;max-width:720px")}>
+                <div style={S("display:flex;flex-direction:column;gap:31.5px;max-width:810px")}>
                   {"\n            "}
-                  <h1 style={S("margin:0;font-size:52px;line-height:1.06;font-weight:600;letter-spacing:-.025em;text-wrap:pretty")}>
+                  <h1 style={S("margin:0;font-size:58.5px;line-height:1.06;font-weight:600;letter-spacing:-.025em;text-wrap:pretty")}>
                     {"Redes de regulación transcripcional y rutas metabólicas de "}
                     <em>
                       {"Bacillus"}
@@ -293,29 +293,29 @@ export default function View(v) {
                   {"\n            "}
                   <div style={S("position:relative")}>
                     {"\n              "}
-                    <div style={S("height:62px;border-radius:12px;display:flex;align-items:center;padding:0 12px 0 20px;gap:12px;background:var(--heroSearch);border:1.5px solid var(--heroSearchBd);box-shadow:0 10px 30px rgba(16,35,240,.08)")}>
+                    <div style={S("height:69.75px;border-radius:13.5px;display:flex;align-items:center;padding:0 13.5px 0 22.5px;gap:13.5px;background:var(--heroSearch);border:1.5px solid var(--heroSearchBd);box-shadow:0 11.25px 33.75px rgba(16,35,240,.08)")}>
                       {"\n                "}
-                      <span style={S("color:var(--mute);font-size:18px")}>
+                      <span style={S("color:var(--mute);font-size:20.25px")}>
                         {"⌕"}
                       </span>
                       {"\n                "}
-                      <input ref={v.hRef} value={(v.hq) ?? ""} onChange={v.onHQ} onKeyDown={v.onHKey} onFocus={v.onHFocus} onBlur={v.onHBlur} placeholder={"Busca un gen, regulador, operón, ruta o especie"} style={S("flex:1;min-width:0;border:0;outline:none;font-size:16px;background:transparent")} />
+                      <input ref={v.hRef} value={(v.hq) ?? ""} onChange={v.onHQ} onKeyDown={v.onHKey} onFocus={v.onHFocus} onBlur={v.onHBlur} placeholder={"Busca un gen, regulador, operón, ruta o especie"} style={S("flex:1;min-width:0;border:0;outline:none;font-size:18px;background:transparent")} />
                       {"\n              "}
                     </div>
                     {"\n              "}
                     {v.showHRes ? (
                       <>
                         {"\n                "}
-                        <div style={S("position:absolute;left:0;right:0;top:70px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px var(--shadow);z-index:5;overflow:hidden")}>
+                        <div style={S("position:absolute;left:0;right:0;top:78.75px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:11.25px;box-shadow:0 13.5px 36px var(--shadow);z-index:5;overflow:hidden")}>
                           {"\n                  "}
                           {L(v.hRes).map((r, $index) => (
                             <React.Fragment key={$index}>
                               {"\n                    "}
-                              <div onMouseDown={r?.onPick} style={S(("padding:12px 16px;display:flex;justify-content:space-between;gap:12px;cursor:pointer;font-size:14px;background:" + (r?.bg ?? "") + ""))}>
+                              <div onMouseDown={r?.onPick} style={S(("padding:13.5px 18px;display:flex;justify-content:space-between;gap:13.5px;cursor:pointer;font-size:15.75px;background:" + (r?.bg ?? "") + ""))}>
                                 <span style={S(("font-weight:600;font-style:" + (r?.fst ?? "") + ""))}>
                                   {I(r?.label)}
                                 </span>
-                                <span style={S("color:var(--mute);font-size:12px")}>
+                                <span style={S("color:var(--mute);font-size:13.5px")}>
                                   {I(r?.kind)}
                                 </span>
                               </div>
@@ -323,7 +323,7 @@ export default function View(v) {
                             </React.Fragment>
                           ))}
                           {"\n                  "}
-                          <div style={S("padding:8px 16px;border-top:1px solid var(--line);color:var(--mute);font-size:11px")}>
+                          <div style={S("padding:9px 18px;border-top:1px solid var(--line);color:var(--mute);font-size:12.38px")}>
                             {"↑↓ navegar · ↵ abrir · esc cerrar"}
                           </div>
                           {"\n                "}
@@ -332,7 +332,7 @@ export default function View(v) {
                       </>
                     ) : null}
                     {"\n              "}
-                    <div style={S("display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:16px;color:var(--heroMute)")}>
+                    <div style={S("display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:18px;color:var(--heroMute)")}>
                       {"\n                "}
                       <span>
                         {"Ejemplos:"}
@@ -341,7 +341,7 @@ export default function View(v) {
                       {L(v.examples).map((x, $index) => (
                         <React.Fragment key={$index}>
                           {"\n                  "}
-                          <span onClick={x?.onClick} style={S("color:var(--ink);white-space:nowrap;padding:5px 11px;background:var(--heroTile);border:1px solid var(--heroLine);border-radius:999px;cursor:pointer;transition:background .15s")} className={"scp2"}>
+                          <span onClick={x?.onClick} style={S("color:var(--ink);white-space:nowrap;padding:5.62px 12.38px;background:var(--heroTile);border:1px solid var(--heroLine);border-radius:1123.88px;cursor:pointer;transition:background .15s")} className={"scp2"}>
                             <span style={S(("font-style:" + (x?.fst ?? "") + ""))}>
                               {I(x?.label)}
                             </span>
@@ -358,16 +358,16 @@ export default function View(v) {
                 {"\n        "}
               </div>
               {"\n        "}
-              <div style={S("position:relative;width:100%;max-width:1240px;margin:0 auto;padding:0 32px")}>
+              <div style={S("position:relative;width:100%;max-width:1395px;margin:0 auto;padding:0 36px")}>
                 {"\n          "}
                 <div style={S("display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--heroLine)")}>
                   {"\n            "}
                   {L(v.stats).map((c, $index) => (
                     <React.Fragment key={$index}>
                       {"\n              "}
-                      <div onClick={c?.onClick} style={S("padding:22px 20px 24px;display:flex;flex-direction:column;gap:4px;cursor:pointer;border-right:1px solid var(--heroLine);transition:background .15s")} className={"scp3"}>
+                      <div onClick={c?.onClick} style={S("padding:24.75px 22.5px 27px;display:flex;flex-direction:column;gap:4.5px;cursor:pointer;border-right:1px solid var(--heroLine);transition:background .15s")} className={"scp3"}>
                         {"\n                "}
-                        <span style={S("font-size:34px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums")}>
+                        <span style={S("font-size:38.25px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums")}>
                           {I(c?.n)}
                         </span>
                         {"\n                "}
@@ -382,16 +382,16 @@ export default function View(v) {
                   {"\n          "}
                 </div>
                 {"\n          "}
-                <div style={S(("min-height:64px;padding:14px 0 22px;border-top:1px solid var(--heroLine);color:var(--heroMute);line-height:1.6;visibility:" + (v.orgNoteVis ?? "") + ""))}>
+                <div style={S(("min-height:72px;padding:15.75px 0 24.75px;border-top:1px solid var(--heroLine);color:var(--heroMute);line-height:1.6;visibility:" + (v.orgNoteVis ?? "") + ""))}>
                   {I(v.orgNote)}
                 </div>
                 {"\n        "}
               </div>
               {"\n        "}
-              <footer style={S("position:relative;padding:18px 32px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--heroMute);border-top:1px solid var(--heroLine)")}>
+              <footer style={S("position:relative;padding:20.25px 36px;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;font-size:13.5px;color:var(--heroMute);border-top:1px solid var(--heroLine)")}>
                 {"\n          "}
                 <span>
-                  {"Instituto de Biotecnología, UNAM · Cuernavaca, Morelos"}
+                  {"Instituto de Biotecnología, UNAM"}
                 </span>
                 <span onClick={v.goAcerca} style={S("cursor:pointer")} className={"scp4"}>
                   {"Cómo citar · Contacto"}

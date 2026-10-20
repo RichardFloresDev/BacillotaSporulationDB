@@ -99,47 +99,47 @@ input::placeholder{color:var(--mute)}
   </sc-if>
 
   <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
-    <div style="overflow:auto;background:var(--bg)">
+    <div style="overflow:auto;background:var(--bg);font-size:14.62px">
       <section style="background:var(--hero);color:var(--ink);position:relative;overflow:hidden;min-height:100%;display:flex;flex-direction:column;transition:background .3s">
         {{ heroNet }}
-        <div style="position:relative;flex:1;width:100%;max-width:1240px;margin:0 auto;padding:72px 32px 48px;display:flex;flex-direction:column;justify-content:center;gap:40px">
-          <div style="display:flex;flex-direction:column;gap:28px;max-width:720px">
-            <h1 style="margin:0;font-size:52px;line-height:1.06;font-weight:600;letter-spacing:-.025em;text-wrap:pretty">Redes de regulación transcripcional y rutas metabólicas de <em>Bacillus</em> y otros Firmicutes</h1>
+        <div style="position:relative;flex:1;width:100%;max-width:1395px;margin:0 auto;padding:81px 36px 54px;display:flex;flex-direction:column;justify-content:center;gap:45px">
+          <div style="display:flex;flex-direction:column;gap:31.5px;max-width:810px">
+            <h1 style="margin:0;font-size:58.5px;line-height:1.06;font-weight:600;letter-spacing:-.025em;text-wrap:pretty">Redes de regulación transcripcional y rutas metabólicas de <em>Bacillus</em> y otros Firmicutes</h1>
             <div style="position:relative">
-              <div style="height:62px;border-radius:12px;display:flex;align-items:center;padding:0 12px 0 20px;gap:12px;background:var(--heroSearch);border:1.5px solid var(--heroSearchBd);box-shadow:0 10px 30px rgba(16,35,240,.08)">
-                <span style="color:var(--mute);font-size:18px">⌕</span>
-                <input ref="{{ hRef }}" value="{{ hq }}" onChange="{{ onHQ }}" onKeyDown="{{ onHKey }}" onFocus="{{ onHFocus }}" onBlur="{{ onHBlur }}" placeholder="Busca un gen, regulador, operón, ruta o especie" style="flex:1;min-width:0;border:0;outline:none;font-size:16px;background:transparent">
+              <div style="height:69.75px;border-radius:13.5px;display:flex;align-items:center;padding:0 13.5px 0 22.5px;gap:13.5px;background:var(--heroSearch);border:1.5px solid var(--heroSearchBd);box-shadow:0 11.25px 33.75px rgba(16,35,240,.08)">
+                <span style="color:var(--mute);font-size:20.25px">⌕</span>
+                <input ref="{{ hRef }}" value="{{ hq }}" onChange="{{ onHQ }}" onKeyDown="{{ onHKey }}" onFocus="{{ onHFocus }}" onBlur="{{ onHBlur }}" placeholder="Busca un gen, regulador, operón, ruta o especie" style="flex:1;min-width:0;border:0;outline:none;font-size:18px;background:transparent">
               </div>
               <sc-if value="{{ showHRes }}" hint-placeholder-val="{{ false }}">
-                <div style="position:absolute;left:0;right:0;top:70px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 32px var(--shadow);z-index:5;overflow:hidden">
+                <div style="position:absolute;left:0;right:0;top:78.75px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:11.25px;box-shadow:0 13.5px 36px var(--shadow);z-index:5;overflow:hidden">
                   <sc-for list="{{ hRes }}" as="r" hint-placeholder-count="0">
-                    <div onMouseDown="{{ r.onPick }}" style="padding:12px 16px;display:flex;justify-content:space-between;gap:12px;cursor:pointer;font-size:14px;background:{{ r.bg }}"><span style="font-weight:600;font-style:{{ r.fst }}">{{ r.label }}</span><span style="color:var(--mute);font-size:12px">{{ r.kind }}</span></div>
+                    <div onMouseDown="{{ r.onPick }}" style="padding:13.5px 18px;display:flex;justify-content:space-between;gap:13.5px;cursor:pointer;font-size:15.75px;background:{{ r.bg }}"><span style="font-weight:600;font-style:{{ r.fst }}">{{ r.label }}</span><span style="color:var(--mute);font-size:13.5px">{{ r.kind }}</span></div>
                   </sc-for>
-                  <div style="padding:8px 16px;border-top:1px solid var(--line);color:var(--mute);font-size:11px">↑↓ navegar · ↵ abrir · esc cerrar</div>
+                  <div style="padding:9px 18px;border-top:1px solid var(--line);color:var(--mute);font-size:12.38px">↑↓ navegar · ↵ abrir · esc cerrar</div>
                 </div>
               </sc-if>
-              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:16px;color:var(--heroMute)">
+              <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:18px;color:var(--heroMute)">
                 <span>Ejemplos:</span>
                 <sc-for list="{{ examples }}" as="x" hint-placeholder-count="5">
-                  <span onClick="{{ x.onClick }}" style="color:var(--ink);white-space:nowrap;padding:5px 11px;background:var(--heroTile);border:1px solid var(--heroLine);border-radius:999px;cursor:pointer;transition:background .15s" style-hover="background:var(--accSoft);color:var(--acc)"><span style="font-style:{{ x.fst }}">{{ x.label }}</span></span>
+                  <span onClick="{{ x.onClick }}" style="color:var(--ink);white-space:nowrap;padding:5.62px 12.38px;background:var(--heroTile);border:1px solid var(--heroLine);border-radius:1123.88px;cursor:pointer;transition:background .15s" style-hover="background:var(--accSoft);color:var(--acc)"><span style="font-style:{{ x.fst }}">{{ x.label }}</span></span>
                 </sc-for>
               </div>
             </div>
           </div>
         </div>
-        <div style="position:relative;width:100%;max-width:1240px;margin:0 auto;padding:0 32px">
+        <div style="position:relative;width:100%;max-width:1395px;margin:0 auto;padding:0 36px">
           <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--heroLine)">
             <sc-for list="{{ stats }}" as="c" hint-placeholder-count="5">
-              <div onClick="{{ c.onClick }}" style="padding:22px 20px 24px;display:flex;flex-direction:column;gap:4px;cursor:pointer;border-right:1px solid var(--heroLine);transition:background .15s" style-hover="background:var(--heroTile)">
-                <span style="font-size:34px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums">{{ c.n }}</span>
+              <div onClick="{{ c.onClick }}" style="padding:24.75px 22.5px 27px;display:flex;flex-direction:column;gap:4.5px;cursor:pointer;border-right:1px solid var(--heroLine);transition:background .15s" style-hover="background:var(--heroTile)">
+                <span style="font-size:38.25px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums">{{ c.n }}</span>
                 <span style="color:var(--heroMute)">{{ c.l }}</span>
               </div>
             </sc-for>
           </div>
-          <div style="min-height:64px;padding:14px 0 22px;border-top:1px solid var(--heroLine);color:var(--heroMute);line-height:1.6;visibility:{{ orgNoteVis }}">{{ orgNote }}</div>
+          <div style="min-height:72px;padding:15.75px 0 24.75px;border-top:1px solid var(--heroLine);color:var(--heroMute);line-height:1.6;visibility:{{ orgNoteVis }}">{{ orgNote }}</div>
         </div>
-        <footer style="position:relative;padding:18px 32px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--heroMute);border-top:1px solid var(--heroLine)">
-          <span>Instituto de Biotecnología, UNAM · Cuernavaca, Morelos</span><span onClick="{{ goAcerca }}" style="cursor:pointer" style-hover="color:var(--acc)">Cómo citar · Contacto</span>
+        <footer style="position:relative;padding:20.25px 36px;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;font-size:13.5px;color:var(--heroMute);border-top:1px solid var(--heroLine)">
+          <span>Instituto de Biotecnología, UNAM</span><span onClick="{{ goAcerca }}" style="cursor:pointer" style-hover="color:var(--acc)">Cómo citar · Contacto</span>
         </footer>
       </section>
     </div>
