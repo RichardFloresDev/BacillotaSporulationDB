@@ -1001,16 +1001,54 @@ class Component extends DCLogic {
       const rs = g.inn.map(e => d.nodes[e.s]);
       g.x = rs.reduce((s, r) => s + r.x, 0) / rs.length + (rnd() - .5) * 30; g.y = rs.reduce((s, r) => s + r.y, 0) / rs.length + (rnd() - .5) * 30;
     });
-    const N = d.list, minD = (p, q) => p.kind === 'tf' && q.kind === 'tf' ? 100 : (p.kind === 'tf' || q.kind === 'tf') ? 46 : 40;
-    for (let it = 0; it < 120; it++) for (let i = 0; i < N.length; i++) for (let j = i + 1; j < N.length; j++) {
-      const p = N[i], q = N[j]; let dx = q.x - p.x, dy = q.y - p.y; const dd = Math.hypot(dx, dy) || 0.01, m = minD(p, q);
-      if (dd < m) { const push = (m - dd) / 2; dx /= dd; dy /= dd; p.x -= dx * push; p.y -= dy * push; q.x += dx * push; q.y += dy * push; }
+    const N = d.list, E = d.edges, nd = d.nodes, mod = new Map(N.map(n => [n, this.modOf(d, n)]));
+    // Refinamiento por fuerzas: resortes en las aristas, repulsión entre nodos, atracción suave al centro
+    // del módulo y nodos empujados fuera de las aristas ajenas, para que las líneas no se encimen.
+    const LEN = e => nd[e.t].kind === 'tf' ? 170 : nd[e.t].inn.length > 1 ? 120 : 82;
+    const segPush = (n, a, b, min, k) => {
+      const vx = b.x - a.x, vy = b.y - a.y, L2 = vx * vx + vy * vy || 1, t = Math.max(0.05, Math.min(0.95, ((n.x - a.x) * vx + (n.y - a.y) * vy) / L2));
+      const px = a.x + vx * t, py = a.y + vy * t; let dx = n.x - px, dy = n.y - py, dd = Math.hypot(dx, dy);
+      if (dd >= min) return; if (dd < 0.01) { dx = -vy; dy = vx; dd = Math.hypot(dx, dy) || 1; }
+      const f = (min - dd) * k; n.x += dx / dd * f; n.y += dy / dd * f; a.x -= dx / dd * f * 0.25; a.y -= dy / dd * f * 0.25; b.x -= dx / dd * f * 0.25; b.y -= dy / dd * f * 0.25;
+    };
+    for (let it = 0, IT = 320; it < IT; it++) {
+      const T = 1 - it / IT, F = N.map(() => [0, 0]), ix = new Map(N.map((n, i) => [n, i]));
+      for (let i = 0; i < N.length; i++) for (let j = i + 1; j < N.length; j++) {
+        const p = N[i], q = N[j], dx = q.x - p.x, dy = q.y - p.y, dd = Math.max(4, Math.hypot(dx, dy));
+        if (dd > 300) continue;
+        const f = (p.kind === 'tf' && q.kind === 'tf' ? 9000 : 2600) / (dd * dd);
+        F[i][0] -= dx / dd * f; F[i][1] -= dy / dd * f; F[j][0] += dx / dd * f; F[j][1] += dy / dd * f;
+      }
+      E.forEach(e => {
+        const i = ix.get(nd[e.s]), j = ix.get(nd[e.t]), p = N[i], q = N[j], dx = q.x - p.x, dy = q.y - p.y, dd = Math.max(1, Math.hypot(dx, dy)), f = (dd - LEN(e)) * 0.05;
+        F[i][0] += dx / dd * f; F[i][1] += dy / dd * f; F[j][0] -= dx / dd * f; F[j][1] -= dy / dd * f;
+      });
+      N.forEach((n, i) => { const m = mod.get(n); if (m) { F[i][0] += (ctr[m][0] - n.x) * 0.003; F[i][1] += (ctr[m][1] - n.y) * 0.003; } });
+      N.forEach((n, i) => { const l = Math.hypot(F[i][0], F[i][1]), mx = 14 * T + 0.5, k = l > mx ? mx / l : 1; n.x += F[i][0] * k; n.y += F[i][1] * k; });
+      if (it > IT * 0.4) E.forEach(e => { const A = nd[e.s], B = nd[e.t]; N.forEach(n => { if (n !== A && n !== B) segPush(n, A, B, 26, 0.35); }); });
     }
+    // Choques de nodos y de etiquetas (la etiqueta va a la derecha del nodo).
+    const lw = n => n.label.length * (n.kind === 'tf' ? 7.6 : 6.6) + 16;
+    const collide = (its) => {
+      for (let it = 0; it < its; it++) {
+        let moved = false;
+        for (let i = 0; i < N.length; i++) for (let j = i + 1; j < N.length; j++) {
+          const p = N[i], q = N[j]; let dx = q.x - p.x, dy = q.y - p.y; const dd = Math.hypot(dx, dy) || 0.01, m = p.kind === 'tf' && q.kind === 'tf' ? 100 : (p.kind === 'tf' || q.kind === 'tf') ? 46 : 40;
+          if (dd < m) { moved = true; const push = (m - dd) / 2; dx /= dd; dy /= dd; p.x -= dx * push; p.y -= dy * push; q.x += dx * push; q.y += dy * push; continue; }
+          const ox = Math.min(p.x + lw(p), q.x + lw(q)) - Math.max(p.x - 10, q.x - 10), oy = 22 - Math.abs(dy);
+          if (ox > 0 && oy > 0) { moved = true; const sy = dy !== 0 ? Math.sign(dy) : 1, push = Math.min(oy, ox) / 2 + 0.5; p.y -= sy * push; q.y += sy * push; }
+        }
+        E.forEach(e => { const A = nd[e.s], B = nd[e.t]; N.forEach(n => { if (n !== A && n !== B) segPush(n, A, B, 20, 0.5); }); });
+        if (!moved) break;
+      }
+    };
+    collide(120);
     const st = this.state || {}, CW = Math.max(520, (st.vw || 1000) - 40), CH = Math.max(360, (st.vh || 700) - 90);
     const raw = N.map(n => [n.x, n.y]), rx = raw.map(p => p[0]), ry = raw.map(p => p[1]);
     const rx0 = Math.min(...rx), rx1 = Math.max(...rx), ry0 = Math.min(...ry), ry1 = Math.max(...ry);
     // Nominal graph size never below 860×560 units so node spacing stays legible; fitView zooms out instead.
-    const tw = Math.max(CW, 860) - 240, th = Math.max(CH, 560) - 150, sc = Math.min(tw / (rx1 - rx0), th / (ry1 - ry0));
+    // Never compress the refined layout (sc ≤ 1 would bring back the overlaps).
+    const tw = Math.max(CW, 860) - 240, th = Math.max(CH, 560) - 150, sc = Math.max(1, Math.min(tw / (rx1 - rx0), th / (ry1 - ry0)));
     N.forEach((n, i) => { n.x = 20 + (raw[i][0] - rx0) * sc; n.y = 60 + (raw[i][1] - ry0) * sc; });
     this.separateModules(d);
   }
