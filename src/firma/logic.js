@@ -1,0 +1,1146 @@
+// Lógica de la app FIRMA, tomada del bloque <script data-dc-script> del prototipo.
+import React from 'react';
+import { DCLogic } from './dc.jsx';
+
+class Component extends DCLogic {
+  static HeroNet = function () {
+    const ref = React.useRef(null), wrap = React.useRef(null);
+    React.useEffect(() => {
+      const cv = ref.current, wr = wrap.current, ctx = cv.getContext('2d'), dpr = window.devicePixelRatio || 1, t0 = performance.now();
+      let W = 0, H = 0, raf, col = '', fr = 0;
+      let rnd, N = [], E = [];
+      const HP = [[0.12, 0.28, 16], [0.42, 0.14, 12], [0.74, 0.26, 15], [0.26, 0.72, 11], [0.56, 0.62, 14], [0.86, 0.74, 10], [0.98, 0.10, 8]];
+      const LINKS = [[0, 1], [1, 2], [0, 3], [3, 4], [4, 2], [4, 5], [1, 4], [2, 6], [5, 2]];
+      const build = () => {
+        N = []; E = []; rnd = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(11);
+        const rw = Math.min(W * 0.95, 1500), x0 = W - rw + Math.min(80, W * 0.06), y0 = H * 0.02, rh = H * 0.92, k = Math.max(18, Math.min(30, rh * 0.06));
+        HP.forEach(([u, v]) => N.push({ hub: 1, x: x0 + u * rw, y: y0 + v * rh, ph: rnd() * 6.28 }));
+        HP.forEach(([, , n], hi) => {
+          const hb = N[hi], rot = rnd() * 6.28;
+          for (let i = 0; i < n; i++) {
+            const r = 40 + k * Math.sqrt(i + 1), ang = rot + i * 2.39996;
+            N.push({ x: hb.x + Math.cos(ang) * r + (rnd() - 0.5) * 6, y: hb.y + Math.sin(ang) * r * 0.85 + (rnd() - 0.5) * 6 });
+            E.push({ s: hi, t: N.length - 1, off: rnd() });
+          }
+        });
+        LINKS.forEach(([s, t], i) => {
+          E.push({ s, t, off: i * 0.19, hh: 1 });
+          if (i % 2 === 0) { const A = N[s], B = N[t], dx = B.x - A.x, dy = B.y - A.y, l = Math.hypot(dx, dy) || 1, side = rnd() < 0.5 ? -1 : 1;
+            N.push({ x: (A.x + B.x) / 2 - dy / l * 50 * side, y: (A.y + B.y) / 2 + dx / l * 50 * side }); E.push({ s, t: N.length - 1, off: rnd() }, { s: t, t: N.length - 1, off: rnd() }); }
+        });
+      };
+      const draw = now => {
+        raf = requestAnimationFrame(draw); if (!W || !H) return;
+        const t = (now - t0) / 1000;
+        if (!col || (++fr % 60 === 0)) col = (getComputedStyle(document.documentElement).getPropertyValue('--heroNet') || '16,35,240').trim();
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+        const gx = Math.sin(t * 0.05) * 10, gy = Math.cos(t * 0.04) * 6;
+        N.forEach((n, i) => { const ph = n.ph != null ? n.ph : i * 1.7; n.dx = n.x + gx + Math.sin(t * 0.3 + ph) * 2.5; n.dy = n.y + gy + Math.cos(t * 0.26 + ph) * 2.5; });
+        E.forEach(e => {
+          const a = { x: N[e.s].dx, y: N[e.s].dy }, b = { x: N[e.t].dx, y: N[e.t].dy }, c = e.hh ? [(a.x + b.x) / 2 + (a.y - b.y) * 0.18, (a.y + b.y) / 2 + (b.x - a.x) * 0.18] : null;
+          ctx.strokeStyle = 'rgba(' + col + ',' + (e.hh ? 0.16 : 0.12) + ')'; ctx.lineWidth = e.hh ? 1.4 : 1;
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); c ? ctx.quadraticCurveTo(c[0], c[1], b.x, b.y) : ctx.lineTo(b.x, b.y); ctx.stroke();
+          const p = (t * (e.hh ? 0.035 : 0.08) + e.off) % 1, q = 1 - p, fade = Math.sin(p * Math.PI);
+          const px = c ? q * q * a.x + 2 * q * p * c[0] + p * p * b.x : a.x + (b.x - a.x) * p, py = c ? q * q * a.y + 2 * q * p * c[1] + p * p * b.y : a.y + (b.y - a.y) * p;
+          ctx.fillStyle = 'rgba(' + col + ',' + (0.5 * fade) + ')'; ctx.beginPath(); ctx.arc(px, py, e.hh ? 2.4 : 1.8, 0, 6.28); ctx.fill();
+        });
+        N.forEach(n0 => {
+          const n = { hub: n0.hub, ph: n0.ph, x: n0.dx, y: n0.dy };
+          if (n.hub) {
+            ctx.fillStyle = 'rgba(' + col + ',0.06)'; ctx.beginPath(); ctx.arc(n.x, n.y, 30 + Math.sin(t * 0.5 + n.ph) * 2.5, 0, 6.28); ctx.fill();
+            ctx.fillStyle = 'rgba(' + col + ',0.5)'; ctx.beginPath(); ctx.arc(n.x, n.y, 8, 0, 6.28); ctx.fill();
+          } else { ctx.fillStyle = 'rgba(' + col + ',0.28)'; ctx.beginPath(); ctx.arc(n.x, n.y, 3.4, 0, 6.28); ctx.fill(); }
+        });
+      };
+      const resize = () => {
+        const r = wr.getBoundingClientRect(), pw = W, ph = H; W = r.width; H = r.height; if (!W || !H) return;
+        cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+        build();
+      };
+      const ro = new ResizeObserver(resize); ro.observe(wr); resize();
+      raf = requestAnimationFrame(draw);
+      return () => { cancelAnimationFrame(raf); ro.disconnect(); };
+    }, []);
+    return React.createElement('div', { ref: wrap, 'aria-hidden': true, style: { position: 'absolute', inset: 0, pointerEvents: 'none', WebkitMaskImage: 'linear-gradient(90deg, transparent 15%, #000 60%)', maskImage: 'linear-gradient(90deg, transparent 15%, #000 60%)' } }, React.createElement('canvas', { ref, style: { display: 'block' } }));
+  };
+  static MOD = { C: 'Metabolismo del carbono', N: 'Metabolismo del nitrógeno', S: 'Esporulación y biopelícula' };
+  static COND = { g: 'Exceso de glucosa', gl: 'Glucosa disponible', b: 'GTP y aminoácidos ramificados altos', nl: 'Limitación de nitrógeno', ne: 'Exceso de nitrógeno', s: 'Inanición, fase estacionaria', f: 'Formación de biopelícula' };
+  static MOTIF = { CcpA: ['caja cre', 'TGWNANCGNTNWCA'], CodY: ['caja CodY', 'AATTTTCWGAAAATT'], TnrA: ['caja TnrA/GlnR', 'TGTNAN7TNACA'], GlnR: ['caja TnrA/GlnR', 'TGTNAN7TNACA'], Spo0A: ['caja 0A', 'TGTCGAA'], SinR: ['caja SinR', 'GTTCTYT'] };
+  static TF = [['CcpA','C','ccpA'],['CggR','C','cggR-gapA-pgk-tpiA-pgm-eno'],['GlcT','C','glcT'],['CcpN','C','ccpN'],['CodY','N','codY'],['TnrA','N','tnrA'],['GlnR','N','glnRA'],['Spo0A','S','spo0A'],['AbrB','S','abrB'],['SigH','S','spo0H'],['SinR','S','sinIR']];
+  static GENES = [['alsS','alsSD','C'],['ackA','ackA','C'],['pta','pta','C'],['citZ','citZ-icd-mdh','C'],['xynP','xynPB','C'],['gntR','gntRKPZ','C'],['acsA','acsA','C'],['ilvB','ilvBHC-leuABCD','N'],['rocG','rocG','N'],['pfkA','pfkA-pykA','C'],['pykA','pfkA-pykA','C'],['gapA','cggR-gapA-pgk-tpiA-pgm-eno','C'],['ptsG','ptsGHI','C'],['gapB','gapB','C'],['pckA','pckA','C'],['dppA','dppABCDE','N'],['ybgE','ybgE','N'],['bcaP','bcaP','N'],['citB','citB','N'],['srfA','srfAA-AD','N'],['nasB','nasBCDEF','N'],['nrgA','nrgAB','N'],['gltA','gltAB','N'],['glnA','glnRA','N'],['ureA','ureABC','N'],['spoIIA','spoIIAA-AB-sigF','S'],['spoIIE','spoIIE','S'],['spoIIG','spoIIGA-sigE','S'],['sinI','sinIR','S'],['kinA','kinA','S'],['spo0M','spo0M','S'],['epsA','epsA-O','S'],['tapA','tapA-sipW-tasA','S'],['slrR','slrR','S']];
+  static E = [
+    ['CcpA','alsS','a','e','A','g'],['CcpA','ackA','a','e','A','g'],['CcpA','pta','a','e','A','g'],['CcpA','citZ','r','e','A','g'],['CcpA','xynP','r','e','A','g'],['CcpA','gntR','r','e','A','g'],['CcpA','acsA','r','e','A','g'],['CcpA','ilvB','d','e','A','g'],['CcpA','rocG','r','e','A','g'],['CcpA','pfkA','a','p','A','g'],['CcpA','pykA','a','p','A','g'],['CcpA','citB','r','e','A','g'],
+    ['CggR','gapA','r','e','A','g'],['GlcT','ptsG','a','e','A','gl'],['CcpN','gapB','r','e','A','g'],['CcpN','pckA','r','e','A','g'],
+    ['CodY','ilvB','r','e','A','b'],['CodY','dppA','r','e','A','b'],['CodY','ybgE','r','e','A','b'],['CodY','bcaP','r','e','A','b'],['CodY','citB','r','e','A','b'],['CodY','srfA','r','e','A','b'],['CodY','rocG','r','p','A','b'],
+    ['TnrA','nasB','a','e','A','nl'],['TnrA','nrgA','a','e','A','nl'],['TnrA','GlnR','r','e','A','nl'],['TnrA','gltA','r','e','A','nl'],
+    ['GlnR','glnA','r','e','A','ne'],['GlnR','TnrA','r','e','A','ne'],['GlnR','ureA','r','e','A','ne'],
+    ['Spo0A','AbrB','r','e','A','s'],['Spo0A','spoIIA','a','e','H','s'],['Spo0A','spoIIE','a','e','A','s'],['Spo0A','spoIIG','a','e','A','s'],['Spo0A','sinI','d','e','A','f'],
+    ['AbrB','SigH','r','e','A','s'],['AbrB','tapA','d','p','A','f'],
+    ['SigH','Spo0A','a','e','H','s'],['SigH','spoIIA','a','e','H','s'],['SigH','kinA','a','e','H','s'],['SigH','spo0M','a','e','H','s'],
+    ['SinR','epsA','r','e','A','f'],['SinR','tapA','r','e','A','f'],['SinR','slrR','r','e','A','f']
+  ];
+  static OP_GAP = 'cggR-gapA-pgk-tpiA-pgm-eno';
+  static PW = [
+    { id: 'glyc', title: 'Glucólisis', keggId: 'bsu00010', meta: 'https://metacyc.org/pathway?orgid=META&id=GLYCOLYSIS',
+      mets: ['Glucosa (extracelular)', 'Glucosa-6-fosfato', 'Fructosa-6-fosfato', 'Fructosa-1,6-bisfosfato', 'Gliceraldehído-3-fosfato', '1,3-bisfosfoglicerato', '3-fosfoglicerato', '2-fosfoglicerato', 'Fosfoenolpiruvato', 'Piruvato'],
+      side: { 4: '⇄ dihidroxiacetona-fosfato (tpiA)' },
+      enz: [['ptsG','2.7.1.199','ptsGHI',[['GlcT','a','e']]],['pgi','5.3.1.9','pgi',[]],['pfkA','2.7.1.11','pfkA-pykA',[['CcpA','a','p']]],['fbaA','4.1.2.13','fbaA',[]],['gapA','1.2.1.12','OPG',[['CggR','r','e']]],['pgk','2.7.2.3','OPG',[['CggR','r','e']]],['pgm','5.4.2.12','OPG',[['CggR','r','e']]],['eno','4.2.1.11','OPG',[['CggR','r','e']]],['pykA','2.7.1.40','pfkA-pykA',[['CcpA','a','p']]]] },
+    { id: 'tca', title: 'Ciclo de Krebs', keggId: 'bsu00020', meta: 'https://metacyc.org/pathway?orgid=META&id=TCA',
+      mets: ['Acetil-CoA + oxalacetato', 'Citrato', 'Isocitrato', '2-oxoglutarato', 'Succinil-CoA', 'Succinato', 'Fumarato', 'Malato', 'Oxalacetato'], side: {},
+      enz: [['citZ','2.3.3.1','citZ-icd-mdh',[['CcpA','r','e']]],['citB','4.2.1.3','citB',[['CcpA','r','e'],['CodY','d','e']]],['icd','1.1.1.42','citZ-icd-mdh',[['CcpA','r','e']]],['odhA','1.2.4.2','odhAB',[]],['sucC','6.2.1.5','sucCD',[]],['sdhA','1.3.5.1','sdhCAB',[]],['fumC','4.2.1.2','fumC',[]],['mdh','1.1.1.37','citZ-icd-mdh',[['CcpA','r','e']]]] },
+    { id: 'acet', title: 'Desbordamiento a acetato', keggId: 'bsu00620', meta: null,
+      mets: ['Piruvato', 'Acetil-CoA', 'Acetil-fosfato', 'Acetato'], side: {},
+      enz: [['pdhA','1.2.4.1','pdhABCD',[]],['pta','2.3.1.8','pta',[['CcpA','a','e']]],['ackA','2.7.2.1','ackA',[['CcpA','a','e']]]] },
+    { id: 'acetoin', title: 'Síntesis de acetoína', keggId: 'bsu00650', meta: null,
+      mets: ['Piruvato', 'α-acetolactato', 'Acetoína'], side: {},
+      enz: [['alsS','2.2.1.6','alsSD',[['CcpA','a','e']]],['alsD','4.1.1.5','alsSD',[['CcpA','a','e']]]] }
+  ];
+  static SP = { Bsub: ['B. subtilis', '168', 1, 'Bacillus subtilis'], Bamy: ['B. amyloliquefaciens', 'FZB42', 1, 'Bacillus amyloliquefaciens'], Blic: ['B. licheniformis', 'DSM 13', 1, 'Bacillus licheniformis'], Bpum: ['B. pumilus', 'SAFR-032', 1, 'Bacillus pumilus'], Bcer: ['B. cereus', 'ATCC 14579', 1, 'Bacillus cereus'], Bant: ['B. anthracis', 'Ames', 1, 'Bacillus anthracis'], Bthu: ['B. thuringiensis', '97-27', 1, 'Bacillus thuringiensis'], Gkau: ['G. kaustophilus', 'HTA426', 1, 'Geobacillus kaustophilus'], Lmon: ['L. monocytogenes', 'EGD-e', 0, 'Listeria monocytogenes'], Saur: ['S. aureus', 'NCTC 8325', 0, 'Staphylococcus aureus'], Llac: ['L. lactis', 'IL1403', 0, 'Lactococcus lactis'], Spne: ['S. pneumoniae', 'TIGR4', 0, 'Streptococcus pneumoniae'], Efae: ['E. faecalis', 'V583', 0, 'Enterococcus faecalis'], Lpla: ['L. plantarum', 'WCFS1', 0, 'Lactiplantibacillus plantarum'], Cdif: ['C. difficile', '630', 1, 'Clostridioides difficile'], Cace: ['C. acetobutylicum', 'ATCC 824', 1, 'Clostridium acetobutylicum'] };
+  static TREE = ['Firmicutes', [['Bacilli', [['Bacillales', [['Bacillaceae', [['Grupo subtilis', [['', ['Bsub', 'Bamy']], 'Blic', 'Bpum']], ['Grupo cereus', ['Bcer', 'Bant', 'Bthu']], 'Gkau']], ['', ['Lmon', 'Saur']]]], ['Lactobacillales', ['Llac', 'Spne', 'Efae', 'Lpla']]]], ['Clostridia', ['Cdif', 'Cace']]]];
+  static PRES = { Bsub: '11111111111', Bamy: '11111111111', Blic: '11111111111', Bpum: '11111111111', Bcer: '11011011111', Bant: '11011011111', Bthu: '11011011111', Gkau: '11011111110', Lmon: '11011010010', Saur: '11001010010', Llac: '11001010000', Spne: '10001010000', Efae: '11000010000', Lpla: '11001010000', Cdif: '10001001110', Cace: '10001011110' };
+  static BASE = { Bsub: 100, Bamy: 93, Blic: 88, Bpum: 84, Bcer: 68, Bant: 67, Bthu: 68, Gkau: 64, Lmon: 52, Saur: 49, Llac: 42, Spne: 40, Efae: 41, Lpla: 43, Cdif: 38, Cace: 39 };
+  static OFF = [4, -2, -6, -4, 6, -3, 2, 8, 10, 3, -5];
+  static TAX = ['Firmicutes', [['Bacilli', [['Bacillales', [['Bacillaceae', [['Bacillus', [['Bsub', 210], ['Bamy', 96], ['Blic', 64], ['Bpum', 41], ['Bcer', 180], ['Bant', 88], ['Bthu', 120]]], ['Geobacillus', [['Gkau', 12]]]]], ['Listeriaceae', [['Listeria', [['Lmon', 150]]]]], ['Staphylococcaceae', [['Staphylococcus', [['Saur', 240]]]]]]], ['Lactobacillales', [['Streptococcaceae', [['Lactococcus', [['Llac', 70]]], ['Streptococcus', [['Spne', 130]]]]], ['Enterococcaceae', [['Enterococcus', [['Efae', 90]]]]], ['Lactobacillaceae', [['Lactiplantibacillus', [['Lpla', 60]]]]]]]]], ['Clostridia', [['Eubacteriales', [['Peptostreptococcaceae', [['Clostridioides', [['Cdif', 110]]]]], ['Clostridiaceae', [['Clostridium', [['Cace', 20]]]]]]]]]]];
+  static LOC = [['Cuernavaca', 'México', 18.92, -99.23, 'Suelo', 's'], ['Zapopan', 'México', 20.72, -103.39, 'Rizosfera de maíz', 's'], ['Ames, Iowa', 'EE. UU.', 42.03, -93.62, 'Suelo agrícola', 's'], ['Marburgo', 'Alemania', 50.80, 8.77, 'Suelo', 's'], ['Ludhiana', 'India', 30.90, 75.85, 'Rizosfera de trigo', 's'], ['San Pedro de Atacama', 'Chile', -22.91, -68.20, 'Suelo de desierto', 's'], ['Queensland', 'Australia', -20.9, 142.7, 'Suelo', 's'], ['Tokio', 'Japón', 35.68, 139.69, 'Natto', 'f'], ['Seúl', 'Corea del Sur', 37.57, 126.98, 'Kimchi', 'f'], ['Normandía', 'Francia', 49.18, -0.37, 'Queso', 'f'], ['Nairobi', 'Kenia', -1.29, 36.82, 'Leche fermentada', 'f'], ['Wageningen', 'Países Bajos', 51.97, 5.67, 'Compost', 'c'], ['Yellowstone', 'EE. UU.', 44.43, -110.59, 'Aguas termales', 'h'], ['Kamchatka', 'Rusia', 54.5, 160.0, 'Aguas termales', 'h'], ['Golfo de México', 'Aguas internacionales', 19.93, -94.36, 'Sedimento marino', 'm'], ['Bahía de Aarhus', 'Dinamarca', 56.10, 10.46, 'Sedimento marino', 'm'], ['São Paulo', 'Brasil', -23.55, -46.63, 'Aislado clínico', 'k'], ['Shanghái', 'China', 31.23, 121.47, 'Intestino humano', 'g'], ['Ciudad de México', 'México', 19.43, -99.13, 'Aislado clínico', 'k'], ['Londres', 'Reino Unido', 51.51, -0.13, 'Aislado clínico', 'k'], ['Boston', 'EE. UU.', 42.36, -71.06, 'Intestino humano', 'g'], ['Ciudad del Cabo', 'Sudáfrica', -33.92, 18.42, 'Alimento', 'f'], ['Buenos Aires', 'Argentina', -34.60, -58.38, 'Alimento', 'f']];
+  static PREF = { Bsub: 'sfmc', Bamy: 'sf', Blic: 'scf', Bpum: 'sm', Bcer: 'sfk', Bant: 's', Bthu: 's', Gkau: 'hc', Lmon: 'fk', Saur: 'k', Llac: 'f', Spne: 'k', Efae: 'gk', Lpla: 'f', Cdif: 'kg', Cace: 's' };
+  static ENV = { all: 'Todos', s: 'Suelo', f: 'Alimento', k: 'Clínico' };
+  static MAP = (() => {
+    const N = {}, gx = 320, gy = i => 40 + i * 64, cx = 980, cy = 350, r = 170;
+    ['Glucosa (extracelular)', 'Glucosa-6-fosfato', 'Fructosa-6-fosfato', 'Fructosa-1,6-bisfosfato', 'Gliceraldehído-3-fosfato', '1,3-bisfosfoglicerato', '3-fosfoglicerato', '2-fosfoglicerato', 'Fosfoenolpiruvato', 'Piruvato'].forEach((l, i) => N['g' + i] = [gx, gy(i), l, 'l']);
+    N.dhap = [540, gy(4), 'Dihidroxiacetona-fosfato', 'b'];
+    N.accoa = [660, gy(9), 'Acetil-CoA', 'r'];
+    N.acp = [660, gy(10.6), 'Acetil-fosfato', 'r'];
+    N.ace = [660, gy(12.2), 'Acetato', 'r'];
+    N.alac = [gx, gy(10.6), 'α-acetolactato', 'r'];
+    N.acn = [gx, gy(12.2), 'Acetoína', 'r'];
+    ['Acetil-CoA + oxalacetato', 'Citrato', 'Isocitrato', '2-oxoglutarato', 'Succinil-CoA', 'Succinato', 'Fumarato', 'Malato', 'Oxalacetato'].forEach((l, i) => { const a = (125 + 36 * i) * Math.PI / 180; N['t' + i] = [cx + r * Math.cos(a), cy + r * Math.sin(a), l, 'o']; });
+    const E = [];
+    for (let i = 0; i < 9; i++) E.push({ pw: 'glyc', i, a: 'g' + i, b: 'g' + (i + 1) });
+    for (let i = 0; i < 8; i++) E.push({ pw: 'tca', i, a: 't' + i, b: 't' + (i + 1) });
+    E.push({ pw: 'acet', i: 0, a: 'g9', b: 'accoa' }, { pw: 'acet', i: 1, a: 'accoa', b: 'acp' }, { pw: 'acet', i: 2, a: 'acp', b: 'ace' });
+    E.push({ pw: 'acetoin', i: 0, a: 'g9', b: 'alac' }, { pw: 'acetoin', i: 1, a: 'alac', b: 'acn' });
+    E.push({ pw: 'glyc', i: null, a: 'g4', b: 'dhap', gene: 'tpiA', ec: '5.3.1.1', regs: [['CggR', 'r', 'e']], bi: true });
+    const C2 = [{ a: 'accoa', b: 't0', pw: 'tca' }, { a: 't8', b: 't0', pw: 'tca', arc: true }];
+    const L = [{ from: 'g1', label: 'Vía de las pentosas fosfato', x: 680, y: gy(1) - 34, kegg: 'bsu00030' }, { from: 't3', label: 'Metabolismo del glutamato', x: 1060, y: 40, kegg: 'bsu00250' }, { from: 'alac', label: 'Biosíntesis de valina y leucina', x: 20, y: gy(10.6), kegg: 'bsu00290' }, { from: 'g8', label: 'Biosíntesis de aminoácidos aromáticos', x: 690, y: gy(8), kegg: 'bsu00400' }];
+    const OWN = { glyc: ['g0', 'g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9', 'dhap'], tca: ['t0', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8'], acet: ['accoa', 'acp', 'ace'], acetoin: ['alac', 'acn'] };
+    return { N, E, C2, L, cx, cy, r, OWN };
+  })();
+  static PAGES = { home: 'Inicio', redes: 'Redes regulatorias', rutas: 'Rutas metabólicas', filo: 'Filogenia y conservación', dist: 'Distribución geográfica', tablas: 'Tablas', descargas: 'Descargas', acerca: 'Acerca' };
+
+  svgRef = { current: null }; oRef = React.createRef(); gRef = React.createRef(); qRef = React.createRef(); hRef = React.createRef();
+  state = {
+    page: 'home', theme: (() => { try { return localStorage.getItem('firma-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); } catch (e) { return 'light'; } })(),
+    menu: false, vw: 1000, vh: 700, narrow: false, sel: [], edge: null, hover: null, q: '', qi: 0, qOpen: false, hq: '', hqi: 0, hOpen: false,
+    act: true, rep: true, ev: 'all', sig: [], view: { k: 1, tx: 0, ty: 0 }, frame: 0, pw: 'glyc', step: null, rtf: null, showReg: true, copied: false,
+    collapsed: [], fSort: 'mod', fh: null, fSel: null, fView: 'tree', sbRoot: 'Firmicutes', sbHov: null, mview: { k: 1, tx: 0, ty: 0 }, netEdge: 'bezier', netGroups: true, dual: true, mixed: false, hullHov: null, mHullHov: null, mvw: 900, mvh: 600, mLab: 'ec', mHov: null, mNodeHov: null, dq: '', dEnv: 'all', dSort: null, dSel: null, dTable: true,
+    org: 'Bsub', orgOpen: false, oq: '', help: false, hstep: null, rhov: null, tb: 'int', tq: '', tF: {}, tSort: null, tPage: 0, tSel: [], tHidden: [], tColsOpen: false, tCopied: false
+  };
+  seed = 7;
+  data = this.build();
+  tree = this.buildTree();
+
+  build() {
+    const C = Component, nodes = {};
+    C.TF.forEach(([id, m, op]) => nodes[id] = { id, label: id === 'SigH' ? 'σH' : id, kind: 'tf', mod: m, operon: op, out: [], inn: [] });
+    C.GENES.forEach(([id, op, m]) => nodes[id] = { id, label: id, kind: 'gene', mod: m, operon: op, out: [], inn: [] });
+    const edges = C.E.map(([s, t, type, ev, sig, cond]) => ({ id: s + '>' + t, s, t, type, ev, sig, cond }));
+    edges.forEach(e => { nodes[e.s].out.push(e); nodes[e.t].inn.push(e); });
+    const d = { nodes, edges, list: Object.values(nodes) };
+    this.layout(d, this.seed);
+    d.list.forEach((n, i) => { n.px = n.x; n.py = n.y; n.ph = i * 2.399; n.fq = 0.8 + (i % 7) * 0.05; });
+    return d;
+  }
+  modOf(d, n) { if (n.kind === 'tf') return n.mod; const ms = [...new Set(n.inn.map(e => d.nodes[e.s].mod))]; return ms.length === 1 ? ms[0] : null; }
+  layout(d, seed) {
+    let a = seed >>> 0;
+    const rnd = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    const ctr = { C: [270, 300], N: [740, 280], S: [520, 600] }, rot = rnd() * Math.PI * 2;
+    Object.keys(ctr).forEach(m => {
+      const c = ctr[m], tfs = d.list.filter(n => n.kind === 'tf' && n.mod === m);
+      tfs.forEach((t, i) => { const ang = rot + i / tfs.length * Math.PI * 2, R = tfs.length > 1 ? 120 : 0; t.x = c[0] + Math.cos(ang) * R; t.y = c[1] + Math.sin(ang) * R; t.ang = ang; });
+      tfs.forEach(t => {
+        const own = t.out.map(e => d.nodes[e.t]).filter(g => g.kind === 'gene' && g.inn.length === 1);
+        const span = Math.min(Math.PI * 1.6, 0.5 * own.length), R = 80 + own.length * 3;
+        own.forEach((g, j) => { const ang = t.ang + (own.length > 1 ? -span / 2 + span * j / (own.length - 1) : 0); g.x = t.x + Math.cos(ang) * R; g.y = t.y + Math.sin(ang) * R; });
+      });
+    });
+    d.list.filter(n => n.kind === 'gene' && n.inn.length > 1).forEach(g => {
+      const rs = g.inn.map(e => d.nodes[e.s]);
+      g.x = rs.reduce((s, r) => s + r.x, 0) / rs.length + (rnd() - .5) * 30; g.y = rs.reduce((s, r) => s + r.y, 0) / rs.length + (rnd() - .5) * 30;
+    });
+    const N = d.list, minD = (p, q) => p.kind === 'tf' && q.kind === 'tf' ? 100 : (p.kind === 'tf' || q.kind === 'tf') ? 46 : 40;
+    for (let it = 0; it < 120; it++) for (let i = 0; i < N.length; i++) for (let j = i + 1; j < N.length; j++) {
+      const p = N[i], q = N[j]; let dx = q.x - p.x, dy = q.y - p.y; const dd = Math.hypot(dx, dy) || 0.01, m = minD(p, q);
+      if (dd < m) { const push = (m - dd) / 2; dx /= dd; dy /= dd; p.x -= dx * push; p.y -= dy * push; q.x += dx * push; q.y += dy * push; }
+    }
+    const st = this.state || {}, CW = Math.max(520, (st.vw || 1000) - 40), CH = Math.max(360, (st.vh || 700) - 90);
+    const raw = N.map(n => [n.x, n.y]), rx = raw.map(p => p[0]), ry = raw.map(p => p[1]);
+    const rx0 = Math.min(...rx), rx1 = Math.max(...rx), ry0 = Math.min(...ry), ry1 = Math.max(...ry);
+    // Nominal graph size never below 860×560 units so node spacing stays legible; fitView zooms out instead.
+    const tw = Math.max(CW, 860) - 240, th = Math.max(CH, 560) - 150, sc = Math.min(tw / (rx1 - rx0), th / (ry1 - ry0));
+    N.forEach((n, i) => { n.x = 20 + (raw[i][0] - rx0) * sc; n.y = 60 + (raw[i][1] - ry0) * sc; });
+    this.separateModules(d);
+  }
+  graphBox(d) {
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    Object.keys(Component.MOD).forEach(m => { const b = this.hullBox(d, m, null, 1.4); if (b) { x0 = Math.min(x0, b[0]); y0 = Math.min(y0, b[1]); x1 = Math.max(x1, b[2]); y1 = Math.max(y1, b[3]); } });
+    d.list.forEach(n => { x0 = Math.min(x0, n.x - 20); y0 = Math.min(y0, n.y - 20); x1 = Math.max(x1, n.x + n.label.length * 9.3 + 24); y1 = Math.max(y1, n.y + 20); });
+    return [x0, y0, x1, y1];
+  }
+  // Same geometry as the drawn hull (zs = 1): pad 26, header 16, +40 right, title min width, member label widths.
+  hullBox(d, m, key, zt) {
+    zt = zt || 1.4;
+    const C = Component, ns = d.list.filter(n => this.modOf(d, n) === m); if (!ns.length) return null;
+    const pad = 26, X = n => n[key || 'x'], Y = n => n[key ? 'py' : 'y'];
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    ns.forEach(n => { const lw = (n.label.length * 6.6 + 10) * zt + 6; x0 = Math.min(x0, X(n)); x1 = Math.max(x1, X(n) + lw); y0 = Math.min(y0, Y(n)); y1 = Math.max(y1, Y(n)); });
+    x0 -= pad; y0 -= pad; y1 += pad; x1 += pad;
+    if (zt > 1.2) { y0 -= 34; const tw = (C.MOD[m].length * 7.4 + 16) * zt, cx = (x0 + x1) / 2; x0 = Math.min(x0, cx - tw / 2); x1 = Math.max(x1, cx + tw / 2); }
+    return [x0, y0, x1, y1, ns];
+  }
+  separateModules(d) {
+    const mods = Object.keys(Component.MOD), gap = 18;
+    for (let it = 0; it < 120; it++) {
+      let moved = false;
+      const B = {}; mods.forEach(m => B[m] = this.hullBox(d, m, null, 1.4));
+      for (let i = 0; i < mods.length; i++) for (let j = i + 1; j < mods.length; j++) {
+        const a = B[mods[i]], b = B[mods[j]]; if (!a || !b) continue;
+        const ox = Math.min(a[2], b[2]) - Math.max(a[0], b[0]) + gap, oy = Math.min(a[3], b[3]) - Math.max(a[1], b[1]) + gap;
+        if (ox > 0 && oy > 0) {
+          moved = true;
+          const sx = (a[0] + a[2]) < (b[0] + b[2]) ? -1 : 1, sy = (a[1] + a[3]) < (b[1] + b[3]) ? -1 : 1, mx = ox < oy ? ox / 2 + 1 : 0, my = ox < oy ? 0 : oy / 2 + 1;
+          a[4].forEach(n => { n.x += sx * mx; n.y += sy * my; }); b[4].forEach(n => { n.x -= sx * mx; n.y -= sy * my; });
+          B[mods[i]] = this.hullBox(d, mods[i], null, 1.4); B[mods[j]] = this.hullBox(d, mods[j], null, 1.4);
+        }
+      }
+      d.list.forEach(n => {
+        const own = this.modOf(d, n), lw = (n.label.length * 6.6 + 10) * 1.4 + 6;
+        mods.forEach(m => {
+          if (m === own) return; const b = B[m]; if (!b) return;
+          if (n.x + lw > b[0] - 8 && n.x < b[2] + 8 && n.y > b[1] - 10 && n.y < b[3] + 10) {
+            moved = true;
+            const l = n.x + lw - b[0] + 8, r = b[2] + 8 - n.x, t = n.y - b[1] + 10, bo = b[3] + 10 - n.y, mn = Math.min(l, r, t, bo);
+            if (mn === l) n.x -= l; else if (mn === r) n.x += r; else if (mn === t) n.y -= t; else n.y += bo;
+          }
+        });
+      });
+      if (!moved) break;
+    }
+  }
+  buildTree() {
+    let k = 0;
+    const mk = (t, depth) => typeof t === 'string' ? { id: t, leaf: true, depth } : { id: 'c' + (k++), name: t[0], depth, kids: t[1].map(c => mk(c, depth + 1)) };
+    const root = mk(Component.TREE, 0);
+    const md = n => n.leaf ? n.depth : Math.max(...n.kids.map(md));
+    return { root, maxD: md(root) };
+  }
+  leaves(n) { return n.leaf ? [n] : n.kids.flatMap(c => this.leaves(c)); }
+  ident(sp, j) {
+    const C = Component; if (C.PRES[sp][j] !== '1') return 0;
+    if (sp === 'Bsub') return 100;
+    const i = Object.keys(C.SP).indexOf(sp);
+    return Math.max(25, Math.min(99, C.BASE[sp] + C.OFF[j] + ((i * 7 + j * 13) % 7) - 3));
+  }
+
+  setSvg = el => {
+    if (el === this.svgRef.current) return;
+    if (this.svgRef.current) { this.svgRef.current.removeEventListener('wheel', this.onWheel); this.ro && this.ro.disconnect(); }
+    this.svgRef.current = el;
+    if (el) { el.addEventListener('wheel', this.onWheel, { passive: false }); this.ro = new ResizeObserver(() => this.measure()); this.ro.observe(el); this.userMoved = false; this.measure(true); }
+  };
+  measure(force) {
+    const el = this.svgRef.current; if (!el) return; const r = el.getBoundingClientRect(); if (r.width < 1) return;
+    const narrow = window.innerWidth < 1200;
+    if (!force && Math.abs(r.width - this.state.vw) < 1 && Math.abs(r.height - this.state.vh) < 1 && narrow === this.state.narrow) return;
+    const big = Math.abs(r.width - (this.layoutW || 0)) > 60 || Math.abs(r.height - (this.layoutH || 0)) > 60;
+    this.setState({ vw: r.width, vh: r.height, narrow }, () => { if (big && !this.userMoved) { this.layoutW = r.width; this.layoutH = r.height; this.layout(this.data, this.seed); this.data.list.forEach(n => { n.px = n.x; n.py = n.y; }); } if (!this.userMoved) this.fitView(this.pendingFit); });
+  }
+
+  componentDidMount() {
+    document.documentElement.dataset.theme = this.state.theme;
+    this.onWheel = e => {
+      e.preventDefault(); this.userMoved = true;
+      const p = this.svgPoint(e), v = this.state.view, k2 = Math.min(4, Math.max(0.3, v.k * (e.deltaY < 0 ? 1.1 : 1 / 1.1)));
+      this.setState({ view: { k: k2, tx: p.x - (p.x - v.tx) * k2 / v.k, ty: p.y - (p.y - v.ty) * k2 / v.k } });
+    };
+    this.onKey = e => {
+      const tag = document.activeElement && document.activeElement.tagName;
+      if (e.key === 'Escape' && (this.state.menu || this.state.orgOpen)) { this.setState({ menu: false, orgOpen: false }); return; }
+      if (e.key === 'Escape' && tag !== 'INPUT') this.setState({ sel: [], edge: null, step: null, rtf: null, fSel: null, tColsOpen: false, help: false });
+      if (this.state.page === 'rutas' && tag !== 'INPUT' && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+        e.preventDefault(); const n = Component.PW.find(p => p.id === this.state.pw).enz.length, c = this.state.step;
+        const nx = c == null ? (e.key === 'ArrowDown' ? 0 : n - 1) : Math.max(0, Math.min(n - 1, c + (e.key === 'ArrowDown' ? 1 : -1)));
+        this.setState({ step: nx, rtf: null });
+      }
+    };
+    window.addEventListener('keydown', this.onKey);
+    this.onHash = () => { const p = (location.hash.match(/^#\/(\w+)/) || [])[1] || 'home'; if (p !== this.state.page && Component.PAGES[p]) this.setState({ page: p }); };
+    window.addEventListener('hashchange', this.onHash); this.onHash();
+    this.onResize = () => { this.measure(); this.setState({ ww: window.innerWidth }); }; window.addEventListener('resize', this.onResize);
+    this.reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.t0 = performance.now();
+    const loop = () => { this.raf = requestAnimationFrame(loop); this.tick(); if (this.sbT0 && performance.now() - this.sbT0 < 560) this.setState(s => ({ frame: s.frame + 1 })); else if (this.sbT0) { this.sbT0 = 0; this.forceUpdate(); } };
+    this.onMsg = e => { const m = e.data || {}; if (m.type === 'firma-globe-ready') { this.globeKey = null; this.syncGlobe(); } if (m.type === 'firma-globe-pick') this.setState({ dSel: m.id }); };
+    window.addEventListener('message', this.onMsg);
+    this.raf = requestAnimationFrame(loop);
+  }
+  componentDidUpdate() {
+    this.measure();
+    if (this.state.page === 'rutas') { this.measureMap(); if (this.lastPw !== this.state.pw) { this.lastPw = this.state.pw; this.mUser = false; this.mFit(this.state.pw); } } else this.lastPw = null;
+    if (this.state.page === 'dist') this.syncGlobe();
+  }
+  componentWillUnmount() {
+    cancelAnimationFrame(this.raf); window.removeEventListener('message', this.onMsg);
+    this.svgRef.current && this.svgRef.current.removeEventListener('wheel', this.onWheel);
+    this.ro && this.ro.disconnect();
+    window.removeEventListener('keydown', this.onKey); window.removeEventListener('hashchange', this.onHash); window.removeEventListener('resize', this.onResize);
+  }
+
+  // Smooth, overdamped easing toward targets: no velocity, no overshoot.
+  tick() {
+    if (this.state.page !== 'redes') return;
+    const t = (performance.now() - this.t0) / 1000, D = this.data, motion = (this.props.motion ?? true) && !this.reduced;
+    const dr = this.drag && this.drag.moved ? D.nodes[this.drag.id] : null;
+    const nb = dr ? new Set([...dr.out.map(e => e.t), ...dr.inn.map(e => e.s)]) : null;
+    let moving = false;
+    D.list.forEach(n => {
+      const dragging = n === dr && n.gx != null;
+      let tx = dragging ? n.gx : n.x, ty = dragging ? n.gy : n.y;
+      if (motion && n !== dr) { tx += Math.sin(t * 0.3 * n.fq + n.ph) * 1.1; ty += Math.cos(t * 0.24 * n.fq + n.ph * 1.3) * 1.1; }
+      if (nb && nb.has(n.id)) { tx += (dr.px - dr.x) * 0.06; ty += (dr.py - dr.y) * 0.06; }
+      const back = n.ret && performance.now() - n.ret < 1400;
+      const a = dragging ? 0.5 : back ? 0.06 : (n.kind === 'tf' ? 0.05 : 0.075);
+      const dx = tx - n.px, dy = ty - n.py;
+      n.px += dx * a; n.py += dy * a;
+      if (Math.abs(dx) + Math.abs(dy) > 0.03) moving = true;
+    });
+    if (moving || this.flowOn) this.setState(s => ({ frame: s.frame + 1 }));
+  }
+
+  svgPoint(e) { const s = this.svgRef.current, pt = s.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(s.getScreenCTM().inverse()); }
+  graphPoint(e) { const pt = this.svgRef.current.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(this.gRef.current.getScreenCTM().inverse()); }
+
+  go(page, extra) {
+    const { fitIds, ...rest } = extra || {};
+    if (page === 'redes' && fitIds) { this.pendingFit = fitIds; this.userMoved = false; }
+    this.setState({ page, hOpen: false, menu: false, ...rest }, () => { if (page === 'redes' && this.svgRef.current) this.fitView(this.pendingFit); });
+    if (location.hash !== '#/' + page) history.pushState(null, '', '#/' + page);
+  }
+  setTheme(t) { document.documentElement.dataset.theme = t; try { localStorage.setItem('firma-theme', t); } catch (e) {} this.setState({ theme: t }); }
+  dlFile(name, text, type) {
+    const url = URL.createObjectURL(new Blob([text], { type: type || 'text/tab-separated-values' }));
+    const a = document.createElement('a'); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  hash(s) { let h = 7; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
+  tfPresent(org, id) { const j = Component.TF.findIndex(t => t[0] === id); return Component.PRES[org][j] === '1'; }
+  genePresent(org, g) {
+    if (org === 'Bsub') return true;
+    const C = Component, n = this.data.nodes[g], sp = C.SP[org];
+    if (n && n.kind === 'tf') return this.tfPresent(org, g);
+    if (!sp[2] && /^(spo|kin|sin)/.test(g)) return false;
+    if (['epsA', 'tapA', 'slrR', 'srfA', 'xynP'].includes(g) && !['Bamy', 'Blic', 'Bpum'].includes(org)) return false;
+    return this.hash(org + g) % 100 < C.BASE[org] + 18;
+  }
+  evOf(e, org) { org = org || this.state.org; return org === 'Bsub' || (['Bamy', 'Blic'].includes(org) && this.hash(org + e.id) % 4 === 0) ? e.ev : (e.ev === 'p' ? 'p' : 'h'); }
+  orgEdges(org) { org = org || this.state.org; return this.data.edges.filter(e => this.tfPresent(org, e.s) && this.genePresent(org, e.t)); }
+  setOrg(id) {
+    this.userMoved = false;
+    this.setState({ org: id, orgOpen: false, oq: '', sel: [], edge: null, step: null, rtf: null, tPage: 0, tSel: [] }, () => { if (this.state.page === 'redes') this.fitView(); });
+  }
+  visible() {
+    const s = this.state;
+    let edges = this.orgEdges().filter(e => (e.type === 'a' ? s.act : e.type === 'd' ? s.dual : s.rep) && (s.ev === 'all' || this.evOf(e) === s.ev) && (!s.sig.length || s.sig.includes(e.sig)));
+    if (s.mixed) {
+      const sg = {}; this.orgEdges().forEach(e => { const g = sg[e.t] = sg[e.t] || { a: 0, r: 0 }; if (e.type !== 'r') g.a++; if (e.type !== 'a') g.r++; });
+      edges = edges.filter(e => sg[e.t] && sg[e.t].a && sg[e.t].r);
+    }
+    const ids = new Set(); edges.forEach(e => { ids.add(e.s); ids.add(e.t); });
+    return { edges, ids };
+  }
+  fitView(ids) {
+    this.pendingFit = null;
+    const v = ids || this.visible().ids;
+    const ns = this.data.list.filter(n => v.has(n.id)); if (!ns.length) return;
+    const xs = ns.map(n => n.x), ys = ns.map(n => n.y);
+    let x0 = Math.min(...xs) - 60, x1 = Math.max(...xs) + 110, y0 = Math.min(...ys) - 64, y1 = Math.max(...ys) + 44;
+    if (!ids && this.state.netGroups) { const b = this.graphBox(this.data); x0 = b[0] - 12; y0 = b[1] - 12; x1 = b[2] + 12; y1 = b[3] + 12; }
+    const W = this.state.vw, H = this.state.vh;
+    const k = Math.max(0.5, Math.min(1.3, (W - 24) / (x1 - x0), (H - 120) / (y1 - y0)));
+    this.setState({ view: { k, tx: W / 2 - k * (x0 + x1) / 2, ty: (H - 20) / 2 - k * (y0 + y1) / 2 + 24 } });
+  }
+  centerOn(id) { const n = this.data.nodes[id], k = Math.max(1.2, this.state.view.k); this.userMoved = true; this.setState({ view: { k, tx: this.state.vw / 2 - k * n.x, ty: this.state.vh / 2 - k * n.y } }); }
+  zoomBy(f) {
+    this.userMoved = true;
+    const v = this.state.view, k2 = Math.min(4, Math.max(0.3, v.k * f)), cx = this.state.vw / 2, cy = this.state.vh / 2;
+    this.setState({ view: { k: k2, tx: cx - (cx - v.tx) * k2 / v.k, ty: cy - (cy - v.ty) * k2 / v.k } });
+  }
+  clickNode(id, shift) { this.setState(s => shift ? { sel: s.sel.includes(id) ? s.sel.filter(x => x !== id) : [...s.sel, id], edge: null } : { sel: [id], edge: null }); }
+  selectEdge(id) { this.setState({ edge: id, sel: [] }); }
+  openInNet(tf, gene) {
+    const D = this.data, e = gene && D.edges.find(x => x.s === tf && x.t === gene);
+    const n = D.nodes[tf], ids = new Set([tf, ...n.out.map(x => x.t), ...n.inn.map(x => x.s)]);
+    this.go('redes', e ? { edge: e.id, sel: [], fitIds: ids } : { sel: [tf], edge: null, fitIds: ids });
+  }
+  openModule(m) {
+    const tfs = Component.TF.filter(t => t[1] === m).map(t => this.data.nodes[t[0]]);
+    this.go('redes', { sel: tfs.map(t => t.id), edge: null, fitIds: new Set(tfs.flatMap(t => [t.id, ...t.out.map(e => e.t)])) });
+  }
+
+  searchAll(q) {
+    q = q.trim().toLowerCase(); if (!q) return [];
+    const D = this.data, C = Component, out = [];
+    C.PW.forEach(p => { if (p.title.toLowerCase().includes(q)) out.push({ label: p.title, kind: 'ruta', go: () => this.go('rutas', { pw: p.id, step: null, rtf: null }) }); });
+    D.list.forEach(n => { if ([n.id, n.label, n.operon].some(x => x.toLowerCase().includes(q))) out.push({ label: n.label, it: n.kind === 'gene', kind: n.kind === 'tf' ? 'regulador' : 'gen · ' + n.operon, go: () => n.kind === 'tf' ? this.openInNet(n.id) : this.go('redes', { sel: [n.id], edge: null, fitIds: new Set([n.id, ...n.inn.map(e => e.s)]) }) }); });
+    C.PW.forEach(p => p.enz.forEach((z, i) => { if (z[0].toLowerCase().includes(q) && !D.nodes[z[0]]) out.push({ label: z[0], it: true, kind: 'enzima · ' + p.title, go: () => this.go('rutas', { pw: p.id, step: i, rtf: null }) }); }));
+    Object.entries(C.SP).forEach(([id, sp]) => { if ((sp[3] + ' ' + sp[0]).toLowerCase().includes(q)) out.push({ label: sp[3], it: true, kind: 'organismo · ' + sp[1], go: () => this.setOrg(id) }); });
+    return out.slice(0, 8);
+  }
+
+  tableDefs() {
+    const D = this.data, C = Component, tl = t => t === 'a' ? 'Activación' : t === 'd' ? 'Dual' : 'Represión', tfs = C.TF.map(t => t[0]);
+    const sps = Object.keys(C.SP);
+    return {
+      int: { label: 'Interacciones', capT: 'Tabla 1.', cap: `Interacciones regulatorias en ${C.SP[this.state.org][3]} ${C.SP[this.state.org][1]}. Experimental: ensayos de unión o de expresión; predicha: búsqueda de motivos; homología: transferida desde B. subtilis 168. Datos de ejemplo.`, file: 'firma_interacciones.tsv',
+        cols: [{ l: 'Regulador', b: 1 }, { l: 'Blanco', gi: 1 }, { l: 'Tipo', tag: 1 }, { l: 'Evidencia', mw: 130 }, { l: 'σ', mw: 60, w: 0.4 }, { l: 'Condición', w: 1.5, mw: 170 }, { l: 'Operón', w: 1.4, mw: 150, i: 1 }, { l: 'Módulo', w: 1.4, mw: 170 }],
+        rows: this.orgEdges().map(e => ({ id: e.id, v: [D.nodes[e.s].label, D.nodes[e.t].label, tl(e.type), (x => x === 'e' ? 'Experimental' : x === 'p' ? 'Predicha' : 'Homología')(this.evOf(e)), 'σ' + e.sig, C.COND[e.cond], D.nodes[e.t].operon, C.MOD[D.nodes[e.s].mod]], go: () => this.openInNet(e.s, e.t) })) },
+      reg: { label: 'Reguladores', capT: 'Tabla 2.', cap: 'Factores de transcripción y factores σ con su número de blancos y su conservación en 16 genomas de Firmicutes.', file: 'firma_reguladores.tsv',
+        cols: [{ l: 'Regulador', b: 1 }, { l: 'Operón', w: 1.4, i: 1 }, { l: 'Módulo', w: 1.3 }, { l: 'Blancos', n: 1 }, { l: 'Activa', n: 1 }, { l: 'Reprime', n: 1 }, { l: 'Genomas', n: 1 }, { l: 'Motivo', w: 1.3 }],
+        rows: tfs.map((id, j) => { const n = D.nodes[id]; return { id, v: [n.label, n.operon, C.MOD[n.mod], n.out.length, n.out.filter(e => e.type === 'a').length, n.out.filter(e => e.type === 'r').length, sps.filter(s => C.PRES[s][j] === '1').length, C.MOTIF[id] ? C.MOTIF[id][1] : '—'], go: () => this.openInNet(id) }; }) },
+      enz: { label: 'Enzimas de rutas', capT: 'Tabla 3.', cap: 'Enzimas de las rutas reconstruidas, con número EC, operón y reguladores transcripcionales conocidos.', file: 'firma_enzimas.tsv',
+        cols: [{ l: 'Gen', b: 1, i: 1 }, { l: 'EC' }, { l: 'Ruta', w: 1.3 }, { l: 'Reacción', w: 2 }, { l: 'Operón', w: 1.4, i: 1 }, { l: 'Reguladores', w: 1.2 }],
+        rows: C.PW.flatMap(p => p.enz.map((z, i) => ({ id: p.id + i, v: [z[0], z[1], p.title, p.mets[i] + ' → ' + p.mets[i + 1], z[2] === 'OPG' ? C.OP_GAP : z[2], z[3].map(r => D.nodes[r[0]].label + (r[1] === 'a' ? ' →' : r[1] === 'd' ? ' ±' : ' ⊣')).join(', ') || '—'], go: () => this.go('rutas', { pw: p.id, step: i, rtf: null }) }))) },
+      cons: { label: 'Conservación', capT: 'Tabla 4.', cap: 'Porcentaje de identidad de ortólogos de cada regulador respecto a B. subtilis 168. — indica ausencia de ortólogo. Valores ilustrativos.', file: 'firma_conservacion.tsv',
+        cols: [{ l: 'Especie', i: 1, w: 1.6 }, { l: 'Cepa', w: 1.1 }, ...tfs.map(t => ({ l: D.nodes[t].label, n: 1, w: 0.7 }))],
+        rows: sps.map(sp => ({ id: sp, v: [C.SP[sp][3], C.SP[sp][1], ...tfs.map((t, j) => this.ident(sp, j) || '—')], go: () => this.go('filo', { fSel: { sp } }) })) }
+    };
+  }
+  tableRows(d) {
+    const s = this.state, q = s.tq.trim().toLowerCase();
+    let rows = d.rows.filter(r => !q || r.v.some(x => String(x).toLowerCase().includes(q)));
+    d.cols.forEach((c, i) => {
+      const f = (s.tF[s.tb + i] || '').trim(); if (!f) return;
+      const m = f.match(/^(>=|<=|>|<|=)\s*(-?\d+(\.\d+)?)$/);
+      rows = rows.filter(r => {
+        const v = r.v[i];
+        if (m && typeof v === 'number') { const n = +m[2]; return m[1] === '>' ? v > n : m[1] === '<' ? v < n : m[1] === '>=' ? v >= n : m[1] === '<=' ? v <= n : v === n; }
+        return String(v).toLowerCase().includes(f.toLowerCase());
+      });
+    });
+    if (s.tSort && s.tSort.tb === s.tb) {
+      const k = s.tSort.k, dir = s.tSort.dir;
+      rows = [...rows].sort((a, b) => { const x = a.v[k], y = b.v[k]; const nx = typeof x === 'number' ? x : -1, ny = typeof y === 'number' ? y : -1; const c = (typeof x === 'number' || typeof y === 'number') ? nx - ny : String(x).localeCompare(String(y), 'es'); return c * dir; });
+    }
+    return rows;
+  }
+
+  renderVals() {
+    const s = this.state, D = this.data, C = Component, page = s.page;
+    const sym = t => t === 'a' ? '→' : t === 'd' ? '±' : '⊣', col = t => t === 'a' ? 'var(--act)' : t === 'd' ? 'var(--dual)' : 'var(--rep)';
+    const dark = s.theme === 'dark';
+    const item = (p, label, desc) => ({ label, desc, fg: page === p ? 'var(--acc)' : 'var(--ink)', bg: page === p ? 'var(--accSoft)' : 'transparent', onClick: () => this.go(p) });
+    const base = {
+      pageTitle: C.PAGES[page], svgRef: this.setSvg, gRef: this.gRef, qRef: this.qRef, hRef: this.hRef,
+      goHome: () => this.go('home'), goAcerca: () => this.go('acerca'),
+      isHome: page === 'home', isRedes: page === 'redes', isRutas: page === 'rutas', isFilo: page === 'filo', isTablas: page === 'tablas', isDist: page === 'dist', isDescargas: page === 'descargas', isAcerca: page === 'acerca',
+      themeIcon: dark ? '☀' : '☾', themeLabel: dark ? 'Claro' : 'Oscuro', toggleTheme: () => this.setTheme(dark ? 'light' : 'dark'),
+      themeOpts: [['light', 'Claro'], ['dark', 'Oscuro']].map(([t, l]) => ({ label: l, bg: s.theme === t ? 'var(--bg)' : 'transparent', fg: s.theme === t ? 'var(--ink)' : 'var(--mute)', onClick: () => this.setTheme(t) })),
+      ...this.orgVals(),
+      topNav: [['home', 'Inicio'], ['redes', 'Redes'], ['rutas', 'Rutas'], ['filo', 'Filogenia'], ['dist', 'Distribución'], ['tablas', 'Tablas']].map(([p, l]) => ({ label: l, fg: page === p ? 'var(--acc)' : 'var(--ink)', bg: page === p ? 'var(--accSoft)' : 'transparent', onClick: () => this.go(p) })),
+      goRedes: () => this.go('redes'), goRutas: () => this.go('rutas'),
+      menuOpen: s.menu, openMenu: () => this.setState({ menu: true }), closeMenu: () => this.setState({ menu: false }),
+      menuGroups: [
+        { title: 'Datos', items: [item('descargas', 'Descargas', 'Archivos TSV, Newick y SBML'), item('acerca', 'Acerca y cómo citar', 'Contenido, criterios de evidencia, versión, licencia y contacto')] }
+      ]
+    };
+
+    if (page === 'home') {
+      const hRes = this.searchAll(s.hq);
+      Object.assign(base, {
+        hq: s.hq, showHRes: s.hOpen && hRes.length > 0,
+        hRes: hRes.map((r, i) => ({ label: r.label, kind: r.kind, fst: r.it ? 'italic' : 'normal', bg: i === s.hqi ? 'var(--accSoft)' : 'var(--bg)', onPick: ev => { ev.preventDefault(); this.setState({ hq: '' }); r.go(); } })),
+        onHQ: e => this.setState({ hq: e.target.value, hqi: 0, hOpen: true }), onHFocus: () => this.setState({ hOpen: true }), onHBlur: () => this.setState({ hOpen: false }),
+        onHKey: e => {
+          if (e.key === 'ArrowDown') { e.preventDefault(); this.setState({ hqi: Math.min(hRes.length - 1, s.hqi + 1) }); }
+          else if (e.key === 'ArrowUp') { e.preventDefault(); this.setState({ hqi: Math.max(0, s.hqi - 1) }); }
+          else if (e.key === 'Enter' && hRes[s.hqi]) { this.setState({ hq: '' }); hRes[s.hqi].go(); }
+          else if (e.key === 'Escape') { this.setState({ hq: '', hOpen: false }); e.target.blur(); }
+        },
+        examples: [['CcpA', () => this.openInNet('CcpA')], ['Spo0A', () => this.openInNet('Spo0A')], ['gapA', () => this.go('rutas', { pw: 'glyc', step: 4, rtf: null }), 1], ['σH', () => this.openInNet('SigH')], ['Glucólisis', () => this.go('rutas', { pw: 'glyc', step: null, rtf: null })], ['L. monocytogenes', () => this.go('filo', { fSel: { sp: 'Lmon' } }), 1]].map(([label, onClick, it]) => ({ label, onClick, fst: it ? 'italic' : 'normal' })),
+        sections: [
+          ['Filogenia y conservación', 'Árbol de Firmicutes alineado con la presencia de ortólogos de cada regulador.', 'filo'],
+          ['Tablas', 'Todos los datos en tablas ordenables, filtrables y exportables.', 'tablas'],
+          ['Descargas', 'Interacciones, reguladores, enzimas y árbol en TSV y Newick.', 'descargas']
+        ].map(([title, text, p]) => ({ title, text, onClick: () => this.go(p) })),
+        stats: [[C.TF.filter(t => this.tfPresent(s.org, t[0])).length, 'reguladores', () => this.go('tablas', { tb: 'reg', tF: {}, tSort: null, tPage: 0, tSel: [], tq: '' })], [new Set(this.orgEdges().map(e => e.t)).size, 'genes blanco', () => this.go('redes')], [this.orgEdges().length, 'interacciones', () => this.go('tablas', { tb: 'int', tF: {}, tSort: null, tPage: 0, tSel: [], tq: '' })], [C.PW.length, 'rutas', () => this.go('rutas')], [Object.keys(C.SP).length, 'genomas', () => this.go('filo')]].map(([n, l, onClick]) => ({ n, l, onClick })),
+        homeMods: Object.keys(C.MOD).map(m => {
+          const tfs = C.TF.filter(t => t[1] === m && this.tfPresent(s.org, t[0])).map(t => D.nodes[t[0]]), es = this.orgEdges().filter(e => D.nodes[e.s].mod === m);
+          const na = es.filter(e => e.type === 'a').length, nr = es.length - na;
+          return { hc: { C: '#9FB0FF', N: '#CDB4FF', S: '#F4BE8A' }[m], c: { C: 'var(--acc)', N: 'var(--t2)', S: 'var(--t3)' }[m], soft: { C: 'var(--accSoft)', N: 'color-mix(in oklab, var(--t2) 10%, var(--bg))', S: 'color-mix(in oklab, var(--t3) 10%, var(--bg))' }[m], name: C.MOD[m], nTf: tfs.length, nG: new Set(es.map(e => e.t).filter(t => D.nodes[t].kind === 'gene')).size, nE: es.length,
+            actPct: (na / Math.max(1, es.length) * 100) + '%', repPct: (nr / Math.max(1, es.length) * 100) + '%', actL: na + ' activaciones', repL: nr + ' represiones',
+            onClick: () => this.openModule(m), tfs: tfs.map(t => ({ label: t.label, n: es.filter(e => e.s === t.id).length, onClick: () => this.openInNet(t.id) })) };
+        }),
+        homePws: C.PW.map(p => ({ title: p.title, n: p.enz.filter(z => this.genePresent(s.org, z[0])).length, reg: p.enz.filter(z => this.genePresent(s.org, z[0]) && z[3].some(r => this.tfPresent(s.org, r[0]))).length,
+          regs: [...new Set(p.enz.flatMap(z => z[3].map(r => D.nodes[r[0]].label)))].join(' · ') || 'sin regulación registrada',
+          segs: p.enz.map(z => { const pr = this.genePresent(s.org, z[0]), rg = pr && z[3].some(r => this.tfPresent(s.org, r[0])); return { t: z[0], hbg: !pr ? 'var(--line)' : rg ? 'var(--acc)' : 'var(--line2)', bg: !pr ? 'transparent' : rg ? 'var(--acc)' : 'var(--soft)', bd: !pr ? '1px dashed var(--line2)' : rg ? '0' : '1px solid var(--line)' }; }),
+          onClick: () => this.go('rutas', { pw: p.id, step: null, rtf: null }) })),
+        topTfs: (() => { const tfs = C.TF.map(t => D.nodes[t[0]]).sort((a, b) => b.out.length - a.out.length).slice(0, 6), mx = tfs[0].out.length;
+          return tfs.map(t => { const a = t.out.filter(e => e.type === 'a').length; return { label: t.label, n: t.out.length, aw: (a / mx * 100) + '%', rw: ((t.out.length - a) / mx * 100) + '%', onClick: () => this.openInNet(t.id) }; }); })(),
+        explore: [['01', 'Redes', 'Interacciones regulador → gen con filtros por tipo, evidencia y factor σ.', 'redes', 'var(--acc)'], ['02', 'Rutas', 'Glucólisis, Krebs, acetato y acetoína con los reguladores de cada paso.', 'rutas', 'var(--act)'], ['03', 'Filogenia', 'Conservación de reguladores a lo largo del árbol de Firmicutes.', 'filo', 'var(--t2)'], ['04', 'Distribución', 'Sitios de aislamiento de los genomas incluidos.', 'dist', 'var(--t3)']].map(([num, title, text, p, c]) => ({ num, title, text, c, onClick: () => this.go(p) })),
+        heroNet: React.createElement(Component.HeroNet),
+        goTablaReg: () => this.go('tablas', { tb: 'reg', tF: {}, tSort: { tb: 'reg', k: 3, dir: -1 }, tPage: 0, tSel: [], tq: '' })
+      });
+    }
+    if (page === 'redes') Object.assign(base, this.netVals());
+    if (page === 'rutas') Object.assign(base, this.rutasVals());
+    if (page === 'filo') Object.assign(base, this.filoVals(), this.sbVals());
+    if (page === 'rutas') Object.assign(base, this.mapVals());
+    if (page === 'dist') Object.assign(base, this.distVals());
+    if (page === 'tablas') Object.assign(base, this.tablaVals());
+    if (page === 'descargas') {
+      const defs = this.tableDefs();
+      const tsv = d => [d.cols.map(c => c.l).join('\t'), ...d.rows.map(r => r.v.join('\t'))].join('\n');
+      const nw = t => typeof t === 'string' ? C.SP[t][3].replace(/ /g, '_') : '(' + t[1].map(nw).join(',') + ')' + (t[0] ? t[0].replace(/[^A-Za-z]/g, '_') : '');
+      base.dl = [
+        ...Object.values(defs).map(d => ({ name: d.label, desc: d.cap, fmt: 'TSV', action: 'Descargar', fg: 'var(--ink)', onClick: () => this.dlFile(d.file, tsv(d)) })),
+        { name: 'Árbol de especies', desc: 'Topología de los 16 genomas de Firmicutes incluidos.', fmt: 'Newick', action: 'Descargar', fg: 'var(--ink)', onClick: () => this.dlFile('firma_arbol.nwk', nw(C.TREE) + ';', 'text/plain') },
+        { name: 'Rutas metabólicas', desc: 'Modelos de las rutas reconstruidas.', fmt: 'SBML', action: 'Pendiente', fg: 'var(--mute)', onClick: () => {} }
+      ];
+    }
+    if (page === 'acerca') {
+      base.counts = [[C.TF.length, 'reguladores'], [C.GENES.length, 'genes blanco'], [C.E.length, 'interacciones'], [C.PW.length, 'rutas'], [Object.keys(C.SP).length, 'genomas']].map(([n, l]) => ({ n, l }));
+      base.copyLabel = s.copied ? 'Copiado ✓' : 'Copiar BibTeX';
+      base.copyCite = () => { try { navigator.clipboard.writeText('@article{firma,\n  title={FIRMA: Firmicutes Integrated Regulatory & Metabolic Atlas},\n  author={[Autores]},\n  journal={[Revista]},\n  year={[año]}\n}'); } catch (e) {} this.setState({ copied: true }); setTimeout(() => this.setState({ copied: false }), 1600); };
+    }
+    return base;
+  }
+
+  // ---------- Geometría de aristas (estilo Cytoscape, implementación propia) ----------
+  // style: 'bezier' | 'straight' | 'taxi'. ra/rb recortan la línea al borde del nodo origen/destino.
+  // off desplaza aristas paralelas; curv controla la curvatura bezier.
+  edgePath(ax, ay, bx, by, o) {
+    const ra = o.ra || 0, rb = o.rb || 0, f = n => n.toFixed(1), dx = bx - ax, dy = by - ay;
+    if (o.style === 'taxi') {
+      const H = o.dir ? o.dir === 'h' : Math.abs(dx) >= Math.abs(dy), off = o.off || 0;
+      let pts;
+      if (H ? Math.abs(dy) < 1.5 : Math.abs(dx) < 1.5) pts = [[ax, ay], [bx, by]];
+      else if (H) { const mx = (o.turn ?? (ax + bx) / 2) + off; pts = [[ax, ay], [mx, ay], [mx, by], [bx, by]]; }
+      else { const my = (o.turn ?? (ay + by) / 2) + off; pts = [[ax, ay], [ax, my], [bx, my], [bx, by]]; }
+      const clip = (p, q, r) => { const L = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1, k = Math.min(r, L - 0.5) / L; return [p[0] + (q[0] - p[0]) * k, p[1] + (q[1] - p[1]) * k]; };
+      const n = pts.length; pts[0] = clip(pts[0], pts[1], ra); pts[n - 1] = clip(pts[n - 1], pts[n - 2], rb);
+      return this.roundPoly(pts, o.radius ?? 8);
+    }
+    const L = Math.max(1, Math.hypot(dx, dy));
+    if (o.style === 'straight') return 'M' + f(ax + dx / L * ra) + ',' + f(ay + dy / L * ra) + ' L' + f(bx - dx / L * rb) + ',' + f(by - dy / L * rb);
+    const off = L * (o.curv ?? 0.12) + (o.off || 0), cx = (ax + bx) / 2 - dy / L * off, cy = (ay + by) / 2 + dx / L * off;
+    const u = (x, y) => { const l = Math.max(1, Math.hypot(cx - x, cy - y)); return [(cx - x) / l, (cy - y) / l]; };
+    const [ux, uy] = u(ax, ay), [vx, vy] = u(bx, by);
+    return 'M' + f(ax + ux * ra) + ',' + f(ay + uy * ra) + ' Q' + f(cx) + ',' + f(cy) + ' ' + f(bx + vx * rb) + ',' + f(by + vy * rb);
+  }
+  // Partículas de flujo: posición calculada cada cuadro sobre la geometría actual (sin SMIL, no se reinician al moverse los nodos).
+  flowDots(list, zs) {
+    this.flowOn = list.length > 0;
+    if (!list.length) return null;
+    const mp = this._mp || (this._mp = document.createElementNS('http://www.w3.org/2000/svg', 'path')), t = performance.now() / 1600, out = [];
+    list.forEach((x, i) => {
+      mp.setAttribute('d', x.d); const L = mp.getTotalLength(); if (!L) return;
+      for (let q = 0; q < 2; q++) { const p = mp.getPointAtLength(((t + i * 0.17 + q * 0.5) % 1) * L); out.push(React.createElement('circle', { key: i * 2 + q, cx: p.x, cy: p.y, r: 2.4 * zs, style: { fill: x.color } })); }
+    });
+    return React.createElement('g', { style: { pointerEvents: 'none' } }, out);
+  }
+  // Envolvente orgánica: convex hull de círculos alrededor de los puntos, suavizada con Catmull-Rom cerrada.
+  blobPath(pts, pad) {
+    const P = []; pts.forEach(([x, y]) => { for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; P.push([x + Math.cos(a) * pad, y + Math.sin(a) * pad]); } });
+    P.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]), lo = [], up = [];
+    P.forEach(p => { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); });
+    for (let i = P.length - 1; i >= 0; i--) { const p = P[i]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+    const h0 = lo.slice(0, -1).concat(up.slice(0, -1)), per = h0.reduce((s, p, i) => s + Math.hypot(h0[(i + 1) % h0.length][0] - p[0], h0[(i + 1) % h0.length][1] - p[1]), 0);
+    const step = Math.max(per / 90, pad * 0.45), h = [];
+    for (let i = 0, carry = 0; i < h0.length; i++) {
+      const a = h0[i], b = h0[(i + 1) % h0.length], L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      let t = carry; while (t < L) { h.push([a[0] + (b[0] - a[0]) * t / L, a[1] + (b[1] - a[1]) * t / L]); t += step; } carry = t - L;
+    }
+    const n = h.length, f = v => v.toFixed(1);
+    let d = 'M' + f(h[0][0]) + ',' + f(h[0][1]), top = h[0];
+    for (let i = 0; i < n; i++) {
+      const p0 = h[(i - 1 + n) % n], p1 = h[i], p2 = h[(i + 1) % n], p3 = h[(i + 2) % n];
+      d += ' C' + f(p1[0] + (p2[0] - p0[0]) / 6) + ',' + f(p1[1] + (p2[1] - p0[1]) / 6) + ' ' + f(p2[0] - (p3[0] - p1[0]) / 6) + ',' + f(p2[1] - (p3[1] - p1[1]) / 6) + ' ' + f(p2[0]) + ',' + f(p2[1]);
+      if (p1[1] < top[1]) top = p1;
+    }
+    const xs = h.map(p => p[0]); return { d: d + 'Z', top: [(Math.min(...xs) + Math.max(...xs)) / 2, top[1]] };
+  }
+  roundPoly(p, r) {
+    const f = n => n.toFixed(1);
+    let d = 'M' + f(p[0][0]) + ',' + f(p[0][1]);
+    for (let i = 1; i < p.length - 1; i++) {
+      const a = p[i - 1], c = p[i], b = p[i + 1], l1 = Math.hypot(c[0] - a[0], c[1] - a[1]) || 1, l2 = Math.hypot(b[0] - c[0], b[1] - c[1]) || 1, rr = Math.min(r, l1 / 2, l2 / 2);
+      d += ' L' + f(c[0] - (c[0] - a[0]) / l1 * rr) + ',' + f(c[1] - (c[1] - a[1]) / l1 * rr) + ' Q' + f(c[0]) + ',' + f(c[1]) + ' ' + f(c[0] + (b[0] - c[0]) / l2 * rr) + ',' + f(c[1] + (b[1] - c[1]) / l2 * rr);
+    }
+    const z = p[p.length - 1]; return d + ' L' + f(z[0]) + ',' + f(z[1]);
+  }
+
+  // ---------- Rutas: mapa ----------
+  setMapSvg = el => {
+    if (el === this.mapSvg) return;
+    if (this.mapSvg) { this.mapSvg.removeEventListener('wheel', this.onMapWheel); this.mro && this.mro.disconnect(); }
+    this.mapSvg = el;
+    if (el) {
+      this.onMapWheel = e => { e.preventDefault(); this.mUser = true; const r = el.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top, v = this.state.mview, k2 = Math.min(4, Math.max(0.35, v.k * (e.deltaY < 0 ? 1.1 : 1 / 1.1))); this.setState({ mview: { k: k2, tx: px - (px - v.tx) * k2 / v.k, ty: py - (py - v.ty) * k2 / v.k } }); };
+      el.addEventListener('wheel', this.onMapWheel, { passive: false });
+      this.mro = new ResizeObserver(() => this.measureMap()); this.mro.observe(el); this.mUser = false; this.measureMap(true);
+    }
+  };
+  measureMap(force) {
+    const el = this.mapSvg; if (!el) return; const r = el.getBoundingClientRect(); if (r.width < 1) return;
+    if (!force && Math.abs(r.width - this.state.mvw) < 1 && Math.abs(r.height - this.state.mvh) < 1) return;
+    this.setState({ mvw: r.width, mvh: r.height }, () => { if (!this.mUser) this.mFit(this.state.pw); });
+  }
+  mFit(pw) {
+    const M = Component.MAP, ids = new Set();
+    M.E.forEach(e => { if (!pw || e.pw === pw) { ids.add(e.a); ids.add(e.b); } });
+    if (!pw) M.L.forEach(l => ids.add(l.from));
+    const pts = [...ids].map(id => M.N[id]);
+    if (!pw) M.L.forEach(l => { pts.push([l.x, l.y]); pts.push([l.x + l.label.length * 6.3 + 24, l.y]); });
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    const x0 = Math.min(...xs) - 165, x1 = Math.max(...xs) + 110, y0 = Math.min(...ys) - 30, y1 = Math.max(...ys) + 34;
+    const W = this.state.mvw, H = this.state.mvh, k = Math.max(pw ? 0.95 : 0.4, Math.min(1.5, (W - 24) / (x1 - x0), (H - 64) / (y1 - y0)));
+    const tall = k * (y1 - y0) > H - 60, wide = k * (x1 - x0) > W - 24;
+    this.setState({ mview: { k, tx: wide ? 12 - k * x0 : W / 2 - k * (x0 + x1) / 2, ty: tall ? 12 - k * y0 : (H - 40) / 2 - k * (y0 + y1) / 2 } });
+  }
+  mapVals() {
+    const s = this.state, C = Component, M = C.MAP, D = this.data, v = s.mview;
+    const focusTf = s.rhov || s.rtf, showReg = s.showReg, gm = s.mLab === 'gene';
+    const edges = M.E.map(e => {
+      const z = e.i != null ? C.PW.find(p => p.id === e.pw).enz[e.i] : [e.gene, e.ec, '', e.regs];
+      const pr = this.genePresent(s.org, z[0]);
+      const regs = pr ? z[3].filter(r => this.tfPresent(s.org, r[0])).map(r => [r[0], r[1], s.org === 'Bsub' ? r[2] : (r[2] === 'p' ? 'p' : 'h')]) : [];
+      return { ...e, gene: z[0], ec: z[1], pr, regs };
+    });
+    const inPw = new Set(); edges.forEach(e => { if (e.pw === s.pw) { inPw.add(e.a); inPw.add(e.b); } });
+    const sh = (a, b, d1, d2) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1; return [a[0] + dx / L * d1, a[1] + dy / L * d1, b[0] - dx / L * d2, b[1] - dy / L * d2]; };
+    const labels = [], txt = (x, y, t, o) => labels.push(React.createElement('text', { key: labels.length, x, y, textAnchor: o.a || 'middle', fontSize: o.fs || 11, fontWeight: o.fw || 400, fontStyle: o.it ? 'italic' : 'normal', opacity: o.op ?? 1, style: { fill: o.c || 'var(--ink)', pointerEvents: 'none' } }, t));
+    const mEdges = [], mBoxes = [];
+    edges.forEach((e, idx) => {
+      const A = M.N[e.a], B = M.N[e.b], onCircle = e.pw === 'tca';
+      let dEdge, mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2;
+      if (onCircle) { const aA = Math.atan2(A[1] - M.cy, A[0] - M.cx), aB0 = Math.atan2(B[1] - M.cy, B[0] - M.cx), aB = aB0 < aA ? aB0 + Math.PI * 2 : aB0, dl = 8 / M.r, p = a => (M.cx + M.r * Math.cos(a)).toFixed(1) + ',' + (M.cy + M.r * Math.sin(a)).toFixed(1); dEdge = 'M' + p(aA + dl) + ' A' + M.r + ',' + M.r + ' 0 0 1 ' + p(aB - dl - 0.012); const am = (aA + aB) / 2; mx = M.cx + M.r * Math.cos(am); my = M.cy + M.r * Math.sin(am); }
+      else dEdge = this.edgePath(A[0], A[1], B[0], B[1], { style: 'taxi', ra: 7, rb: 8 });
+      const sel = e.i != null && e.pw === s.pw && s.step === e.i, hit = focusTf && e.regs.some(r => r[0] === focusTf);
+      const op = focusTf ? (hit ? 1 : 0.28) : (e.pw === s.pw ? 1 : 0.42);
+      mEdges.push({ flow: sel || !!hit, d: dEdge, st: sel ? 'var(--acc)' : 'var(--ink)', w: sel ? 2 : 1.3, dash: 'none', op, mEnd: sel ? 'url(#mkA)' : 'url(#mkI)', mStart: e.bi ? 'url(#mkIs)' : 'none' });
+      const t = gm ? e.gene : e.ec, w = Math.max(44, t.length * 6.4 + 12), hov = s.mHov === idx;
+      const n = e.regs.length, bw = n ? (w - 4) / n : 0;
+      mBoxes.push({ op, x: mx - w / 2, y: my - 9, w2: w, rx: mx - w / 2 - 4, ry: my - 13, w: w + 8, h: 26 + (showReg && n ? 4 : 0), ringOp: hit ? 1 : 0,
+        fill: sel ? 'var(--acc)' : e.pr ? 'var(--accSoft)' : 'var(--bg)', st: hov ? 'var(--ink)' : sel || e.pr ? 'var(--acc)' : 'var(--line2)', sw: hov ? 1.8 : 1, dash: e.pr ? 'none' : '3 2',
+        bars: showReg ? e.regs.map((r, j) => ({ x: mx - w / 2 + 2 + j * bw + (j ? 1 : 0), y: my + 11, w: Math.max(2, bw - (n > 1 ? 1 : 0)), c: r[1] === 'a' ? 'var(--act)' : r[1] === 'd' ? 'var(--dual)' : 'var(--rep)' })) : [],
+        onDown: ev => ev.stopPropagation(),
+        onClick: () => { if (e.i == null) return; this.lastPw = e.pw; this.setState({ pw: e.pw, step: sel ? null : e.i, rtf: null }); },
+        onEnter: () => this.setState({ mHov: idx }), onLeave: () => this.setState({ mHov: null }) });
+      txt(mx, my + 3.8, t, { fs: 10.5, fw: 600, it: gm, op, c: sel ? 'var(--onAcc)' : e.pr ? 'var(--acc)' : 'var(--mute)' });
+    });
+    M.C2.forEach(c => {
+      const A = M.N[c.a], B = M.N[c.b], op = focusTf ? 0.28 : (c.pw === s.pw ? 1 : 0.42);
+      if (c.arc) mEdges.push({ d: 'M' + A[0].toFixed(1) + ',' + A[1].toFixed(1) + ' A' + M.r + ',' + M.r + ' 0 0 1 ' + B[0].toFixed(1) + ',' + B[1].toFixed(1), st: 'var(--mute)', w: 1.2, dash: '4 4', op, mEnd: 'none', mStart: 'none' });
+      else mEdges.push({ d: this.edgePath(A[0], A[1], B[0], B[1], { style: 'taxi', ra: 7, rb: 8 }), st: 'var(--mute)', w: 1.2, dash: '5 4', op, mEnd: 'url(#mkI)', mStart: 'none' });
+    });
+    const mLinks = M.L.map(l => {
+      const A = M.N[l.from], w = l.label.length * 6.3 + 24, rx = l.x, ry = l.y - 12, cxr = rx + w / 2, cyr = l.y;
+      const Hd = Math.abs(cxr - A[0]) >= Math.abs(cyr - A[1]), lpath = this.edgePath(A[0], A[1], cxr, cyr, { style: 'taxi', ra: 7, rb: Hd ? w / 2 + 1 : 13 });
+      txt(cxr, cyr + 4, l.label, { fs: 11, c: 'var(--ink2)', op: inPw.has(l.from) && !focusTf ? 1 : 0.6 });
+      return { d: lpath, x: rx, y: ry, w, st: 'var(--line2)', cur: 'pointer', onDown: ev => ev.stopPropagation(), onClick: () => window.open('https://www.kegg.jp/pathway/' + l.kegg, '_blank') };
+    });
+    const mNodes = Object.entries(M.N).map(([id, n]) => {
+      const op = focusTf ? 0.5 : inPw.has(id) ? 1 : 0.42, hv = s.mNodeHov === id;
+      const lo = { op, fs: 11.5, c: 'var(--ink)', fw: hv ? 700 : 400 };
+      if (n[3] === 'l') txt(n[0] - 11, n[1] + 4, n[2], { ...lo, a: 'end' });
+      else if (n[3] === 'r') txt(n[0] + 11, n[1] + 4, n[2], { ...lo, a: 'start' });
+      else if (n[3] === 'b') txt(n[0], n[1] + 20, n[2], lo);
+      else { const ux = (n[0] - M.cx) / M.r, uy = (n[1] - M.cy) / M.r; txt(n[0] + ux * 13, n[1] + uy * 13 + 4 + (uy > 0.6 ? 6 : uy < -0.6 ? -4 : 0), n[2], { ...lo, a: ux > 0.3 ? 'start' : ux < -0.3 ? 'end' : 'middle' }); }
+      return { x: n[0], y: n[1], r: hv ? 6 : 4.5, op, fill: 'var(--bg)', st: 'var(--ink)', onEnter: () => this.setState({ mNodeHov: id }), onLeave: () => this.setState({ mNodeHov: null }) };
+    });
+    const lw = t => t.length * 6.7;
+    const gcol = { glyc: 'var(--acc)', tca: 'var(--t2)', acet: 'var(--t3)', acetoin: 'var(--acc)' };
+    const mGroups = Object.entries(M.OWN).map(([pid, ids]) => {
+      const pts = [];
+      ids.forEach(id => { const n = M.N[id], w = lw(n[2]); pts.push([n[0], n[1]]);
+        if (n[3] === 'l') pts.push([n[0] - 12 - w, n[1]]); else if (n[3] === 'r') pts.push([n[0] + 12 + w, n[1]]); else if (n[3] === 'b') { pts.push([n[0] - w / 2, n[1] + 20]); pts.push([n[0] + w / 2, n[1] + 20]); }
+        else { const ux = (n[0] - M.cx) / M.r, uy = (n[1] - M.cy) / M.r, lx = n[0] + ux * 13, ly = n[1] + uy * 16; pts.push(ux > 0.3 ? [lx + w, ly] : ux < -0.3 ? [lx - w, ly] : [lx, ly]); if (Math.abs(ux) <= 0.3) { pts.push([lx - w / 2, ly]); pts.push([lx + w / 2, ly]); } } });
+      const p = C.PW.find(q => q.id === pid), on = pid === s.pw, hov = s.mHullHov === pid, col = gcol[pid], ys = ids.map(id => M.N[id][1]), xs = ids.map(id => M.N[id][0]);
+      const bl = { top: [pid === 'tca' ? M.cx : (Math.min(...xs) + Math.max(...xs)) / 2, Math.min(...ys) - (pid === 'tca' ? 30 : 22)] };
+      txt(bl.top[0], bl.top[1], p.title.toUpperCase(), { fs: 11, fw: 700, c: col, op: on || hov ? 1 : 0.65 });
+      return { c: col, op: hov ? 0.24 : on ? 0.17 : 0.06, pts: ids.map(id => ({ x: M.N[id][0], y: M.N[id][1], r: 44 })),
+        onEnter: () => this.setState({ mHullHov: pid }), onLeave: () => this.setState({ mHullHov: null }),
+        onClick: () => { if (this.mPanMoved) return; this.setState({ pw: pid, step: null, rtf: null }); } };
+    });
+    let mInfo = '';
+    if (s.mHov != null) { const e = edges[s.mHov], A = M.N[e.a], B = M.N[e.b]; mInfo = e.gene + ' · EC ' + e.ec + ' · ' + A[2] + ' → ' + B[2] + (e.pr ? (e.regs.length ? ' · ' + e.regs.map(r => D.nodes[r[0]].label + (r[1] === 'a' ? ' →' : r[1] === 'd' ? ' ±' : ' ⊣')).join(', ') : '') : ' · sin ortólogo'); }
+    else if (s.mNodeHov) mInfo = M.N[s.mNodeHov][2];
+    return {
+      mapRef: this.setMapSvg, mViewBox: '0 0 ' + s.mvw + ' ' + s.mvh, mT: 'translate(' + v.tx + ',' + v.ty + ') scale(' + v.k + ')',
+      mGroups, mEdges, mBoxes, mNodes, mLinks,
+      mFlow: React.createElement('g', { style: { pointerEvents: 'none' } }, mEdges.filter(x => x.flow).map((x, i) => [0, 1, 2].map(q => React.createElement('circle', { key: i + '-' + q, r: 2.6, style: { fill: 'var(--acc)' } }, React.createElement('animateMotion', { dur: '1.5s', repeatCount: 'indefinite', path: x.d, begin: (-q * 0.5) + 's' }))))), mLabels: React.createElement('g', null, labels), mInfo: mInfo || ' ', mInfoOp: mInfo ? 1 : 0,
+      mZoomPct: Math.round(v.k * 100) + ' %', mCursor: this.mPan && this.mPan.moved ? 'grabbing' : 'grab',
+      mLabOpts: [['ec', 'EC'], ['gene', 'Gen']].map(([k, l]) => ({ label: l, bg: s.mLab === k ? 'var(--bg)' : 'transparent', fg: s.mLab === k ? 'var(--ink)' : 'var(--mute)', onClick: () => this.setState({ mLab: k }) })),
+      mFitAll: () => { this.mUser = false; this.mFit(null); }, mFitCur: () => { this.mUser = false; this.mFit(s.pw); },
+      mZoomIn: () => this.mZoom(1.25), mZoomOut: () => this.mZoom(0.8),
+      mDown: e => { this.mPanMoved = false; this.mPan = { sx: e.clientX, sy: e.clientY, tx: v.tx, ty: v.ty, moved: false }; this.mapSvg.setPointerCapture(e.pointerId); },
+      mMove: e => { const p = this.mPan; if (!p) return; if (!p.moved && Math.hypot(e.clientX - p.sx, e.clientY - p.sy) > 3) p.moved = true; if (p.moved) { this.mUser = true; this.setState({ mview: { ...this.state.mview, tx: p.tx + e.clientX - p.sx, ty: p.ty + e.clientY - p.sy } }); } },
+      mUp: () => { this.mPanMoved = !!(this.mPan && this.mPan.moved); if (this.mPan && !this.mPan.moved) this.setState({ step: null, rtf: null }); this.mPan = null; }
+    };
+  }
+  mZoom(f) { this.mUser = true; const v = this.state.mview, k2 = Math.min(4, Math.max(0.35, v.k * f)), cx = this.state.mvw / 2, cy = this.state.mvh / 2; this.setState({ mview: { k: k2, tx: cx - (cx - v.tx) * k2 / v.k, ty: cy - (cy - v.ty) * k2 / v.k } }); }
+
+  // ---------- Taxonomía (sunburst) ----------
+  taxTree() {
+    if (this._tax) return this._tax;
+    const byId = {};
+    const mk = (t, parent, depth) => {
+      const leaf = typeof t[1] === 'number', id = t[0];
+      const n = { id, name: leaf ? Component.SP[id][3] : id, short: leaf ? Component.SP[id][0] : id, leaf, sp: leaf ? id : null, parent, depth, value: leaf ? t[1] : 0, kids: [] };
+      byId[id] = n;
+      if (!leaf) { n.kids = t[1].map(c => mk(c, n, depth + 1)); n.value = n.kids.reduce((a, c) => a + c.value, 0); }
+      return n;
+    };
+    const root = mk(Component.TAX, null, 0);
+    return this._tax = { root, byId };
+  }
+  setSbSvg = el => { if (el === this.sbSvg) return; this.sbro && this.sbro.disconnect(); this.sbSvg = el; if (el) { this.sbro = new ResizeObserver(() => { const bb = el.getBoundingClientRect(), w = Math.min(bb.width, bb.height); if (Math.abs(w - (this.sbW || 0)) > 4) { this.sbW = w; this.forceUpdate(); } }); this.sbro.observe(el); } };
+  sbSetRoot(id) { this.sbPrev = this.sbCur; this.sbT0 = performance.now(); this.setState({ sbRoot: id, sbHov: null }); }
+  sbVals() {
+    const s = this.state, T = this.taxTree(), root = T.byId[s.sbRoot] || T.root;
+    const maxD = n => n.leaf ? n.depth : Math.max(...n.kids.map(maxD));
+    const rel = maxD(root) - root.depth, pxw = this.sbSvg ? Math.min(this.sbSvg.getBoundingClientRect().width, this.sbSvg.getBoundingClientRect().height) : 660, inner = Math.max(62, 62 * 660 / Math.max(300, pxw) * 0.8), R = 318, rw = (R - inner) / Math.max(1, rel);
+    const tgt = {};
+    const lay = (n, a0, a1) => { const d = n.depth - root.depth; tgt[n.id] = [a0, a1, d ? inner + (d - 1) * rw : 0, d ? inner + d * rw - 1 : inner]; let a = a0; n.kids.forEach(c => { const da = (a1 - a0) * c.value / n.value; lay(c, a, a + da); a += da; }); };
+    lay(root, 0, Math.PI * 2);
+    let cur = tgt;
+    const el = this.sbT0 ? Math.min(1, (performance.now() - this.sbT0) / 520) : 1;
+    if (el < 1 && this.sbPrev) { const e = 1 - Math.pow(1 - el, 3); cur = {}; Object.keys(tgt).forEach(id => { const p = this.sbPrev[id] || tgt[id], t = tgt[id]; cur[id] = t.map((v, i) => p[i] + (v - p[i]) * e); }); }
+    this.sbCur = cur;
+    const arc = (a0, a1, r0, r1) => {
+      if (a1 - a0 >= Math.PI * 2 - 1e-4) a1 = a0 + Math.PI * 2 - 1e-4;
+      const p = (a, r) => (r * Math.sin(a)).toFixed(2) + ',' + (-r * Math.cos(a)).toFixed(2), lg = a1 - a0 > Math.PI ? 1 : 0;
+      return 'M' + p(a0, r1) + ' A' + r1 + ',' + r1 + ' 0 ' + lg + ' 1 ' + p(a1, r1) + ' L' + p(a1, r0) + ' A' + r0 + ',' + r0 + ' 0 ' + lg + ' 0 ' + p(a0, r0) + 'Z';
+    };
+    const colorOf = n => { let x = n; while (x.parent && x.depth > 2) x = x.parent; const nm = x.depth >= 2 ? x.id : (x.id === 'Clostridia' ? 'Eubacteriales' : 'Bacillales'); return nm === 'Lactobacillales' ? 'var(--t2)' : nm === 'Eubacteriales' ? 'var(--t3)' : 'var(--acc)'; };
+    const nodes = []; const walk = n => { if (n !== root) nodes.push(n); n.kids.forEach(walk); }; walk(root);
+    const hovPath = new Set(); if (s.sbHov) { let x = T.byId[s.sbHov]; while (x) { hovPath.add(x.id); x = x.parent; } }
+    const sbr = this.sbSvg && this.sbSvg.getBoundingClientRect(), px = sbr ? Math.min(sbr.width, sbr.height) : 660, u = 660 / Math.max(200, px), fs = Math.max(10.5, 11 * u), cw = fs * 0.6;
+    const labels = [];
+    const sbArcs = nodes.map(n => {
+      const [a0, a1, r0, r1] = cur[n.id], d = n.depth - root.depth, fo = Math.max(0.2, 0.92 - (d - 1) * 0.16);
+      const on = hovPath.has(n.id), selSp = n.leaf && s.fSel && s.fSel.sp === n.sp;
+      const mid = (a0 + a1) / 2, rm = (r0 + r1) / 2, len = (a1 - a0) * rm, ringW = r1 - r0;
+      if (len > fs * 1.3 && ringW > cw * 4 + 8) {
+        const maxC = Math.floor((ringW - 8) / cw), nm = n.leaf ? n.short : n.name, t = nm.length > maxC ? (maxC >= 6 ? nm.slice(0, maxC - 1) + '…' : '') : nm;
+        const deg = mid * 180 / Math.PI, flip = deg > 180, rot = flip ? deg + 90 : deg - 90;
+        labels.push(React.createElement('text', { key: n.id, x: 0, y: 0, transform: 'rotate(' + rot.toFixed(2) + ') translate(' + (flip ? -rm : rm).toFixed(1) + ',' + (fs * 0.35).toFixed(1) + ')', textAnchor: 'middle', fontSize: fs, fontStyle: n.leaf ? 'italic' : 'normal', fontWeight: on || selSp ? 700 : 500, style: { fill: fo > 0.5 ? 'var(--onAcc)' : 'var(--ink)', pointerEvents: 'none' } }, t));
+      }
+      return { d: arc(a0, a1, r0, r1), fill: colorOf(n), fo: on ? Math.min(1, fo + 0.12) : (s.sbHov ? fo * 0.75 : fo), st: selSp ? 'var(--ink)' : 'var(--bg)', sw: selSp ? 2 : 1,
+        onEnter: () => this.setState({ sbHov: n.id }),
+        onClick: () => n.leaf ? this.setState({ fSel: { sp: n.sp } }) : this.sbSetRoot(n.id) };
+    });
+    labels.push(React.createElement('text', { key: '_c1', x: 0, y: -2, textAnchor: 'middle', fontSize: Math.max(12, 12 * u), fontWeight: 700, style: { fill: 'var(--ink)', pointerEvents: 'none' } }, root.name.length > 16 ? root.name.slice(0, 15) + '…' : root.name));
+    labels.push(React.createElement('text', { key: '_c2', x: 0, y: 6 + fs, textAnchor: 'middle', fontSize: fs * 0.95, style: { fill: 'var(--mute)', pointerEvents: 'none' } }, root.value.toLocaleString('es-MX') + ' genomas'));
+    if (root.parent) labels.push(React.createElement('text', { key: '_c3', x: 0, y: 10 + fs * 2.1, textAnchor: 'middle', fontSize: fs * 0.9, style: { fill: 'var(--acc)', pointerEvents: 'none' } }, '↑ subir'));
+    const crumbs = []; let x = root; while (x) { crumbs.unshift(x); x = x.parent; }
+    const h = s.sbHov && T.byId[s.sbHov];
+    return {
+      sbInner: inner, sbRef: this.setSbSvg, sbArcs, sbLabels: React.createElement('g', null, labels),
+      sbCrumbs: crumbs.flatMap((c, i) => [...(i ? [{ label: '›', fg: 'var(--line2)', fw: 400, onClick: () => {} }] : []), { label: c.name, fg: c === root ? 'var(--ink)' : 'var(--acc)', fw: c === root ? 600 : 400, onClick: () => c !== root && this.sbSetRoot(c.id) }]),
+      sbInfo: h ? h.name + ' · ' + h.value.toLocaleString('es-MX') + ' genomas · ' + (h.value / root.value * 100).toFixed(1) + ' %' : root.kids.length + ' grupos · ' + root.value.toLocaleString('es-MX') + ' genomas',
+      sbLeave: () => this.setState({ sbHov: null }), sbUp: () => root.parent && this.sbSetRoot(root.parent.id), sbUpCur: root.parent ? 'pointer' : 'default'
+    };
+  }
+
+  // ---------- Distribución ----------
+  samples(org) {
+    this._samp = this._samp || {};
+    if (this._samp[org]) return this._samp[org];
+    const C = Component, pref = C.PREF[org];
+    const out = C.LOC.map((l, i) => ({ l, i })).filter(({ l }) => pref.includes(l[5]) && (org === 'Bsub' || this.hash(org + l[0]) % 10 < 7)).map(({ l, i }) => {
+      const h = this.hash(org + '|' + l[0]);
+      return { id: org + i, acc: 'GCA_' + String(100000000 + h % 899999999).slice(0, 9) + '.' + (1 + h % 3), env: l[4], cat: 'fk'.includes(l[5]) ? (l[5] === 'f' ? 'f' : 'k') : l[5] === 'g' ? 'k' : 's', geo: l[0] + ', ' + l[1], lat: l[2], lon: l[3], year: 1994 + h % 31, n: 1 + h % 6 };
+    });
+    return this._samp[org] = out;
+  }
+  distRows() {
+    const s = this.state, q = s.dq.trim().toLowerCase();
+    let rows = this.samples(s.org).filter(r => (s.dEnv === 'all' || r.cat === s.dEnv) && (!q || (r.acc + ' ' + r.env + ' ' + r.geo).toLowerCase().includes(q)));
+    if (s.dSort) { const k = s.dSort.k, d = s.dSort.dir; rows = [...rows].sort((a, b) => (typeof a[k] === 'number' ? a[k] - b[k] : String(a[k]).localeCompare(String(b[k]), 'es')) * d); }
+    return rows;
+  }
+  setGlobe = el => { if (el !== this.globe) { this.globe = el; this.globeKey = null; } };
+  syncGlobe() {
+    if (!this.globe || !this.globe.contentWindow) return;
+    const s = this.state, rows = this.distRows(), key = s.org + '|' + s.theme + '|' + rows.map(r => r.id).join(',');
+    if (key === this.globeKey) return;
+    this.globeKey = key;
+    this.globe.contentWindow.postMessage({ type: 'firma-globe-points', theme: s.theme, points: rows.map(r => ({ id: r.id, lat: r.lat, lon: r.lon, n: r.n, label: r.acc + ' · ' + r.env, geo: r.geo })) }, '*');
+  }
+  distVals() {
+    const s = this.state, C = Component, rows = this.distRows();
+    const cols = [['acc', 'Accesión'], ['env', 'Ambiente'], ['geo', 'Localidad'], ['lat', 'Latitud', 1], ['lon', 'Longitud', 1], ['year', 'Año', 1]];
+    const focus = id => { this.setState({ dSel: id }); this.globe && this.globe.contentWindow && this.globe.contentWindow.postMessage({ type: 'firma-globe-focus', id }, '*'); };
+    const all = this.samples(s.org);
+    return {
+      globeRef: this.setGlobe, dq: s.dq, onDQ: e => this.setState({ dq: e.target.value }),
+      dCount: rows.length === all.length ? all.length + ' aislamientos' : rows.length + ' de ' + all.length + ' aislamientos',
+      dEnvOpts: Object.entries({ all: 'Todos', s: 'Ambiental', f: 'Alimento', k: 'Clínico' }).map(([k, l]) => ({ label: l, bg: s.dEnv === k ? 'var(--bg)' : 'transparent', fg: s.dEnv === k ? 'var(--ink)' : 'var(--mute)', onClick: () => this.setState({ dEnv: k }) })),
+      dShowTable: s.dTable, dTableLabel: s.dTable ? 'Ocultar tabla' : 'Mostrar tabla', dToggleTable: () => this.setState({ dTable: !s.dTable }),
+      dGrid: s.dTable ? 'minmax(0,1.15fr) minmax(320px,1fr)' : 'minmax(0,1fr)',
+      dCols: '170px minmax(140px,1fr) minmax(170px,1.3fr) 80px 90px 60px',
+      dHead: cols.map(([k, l, n]) => { const on = s.dSort && s.dSort.k === k; return { label: l, jc: n ? 'flex-end' : 'flex-start', fg: on ? 'var(--acc)' : 'var(--ink)', arrow: on ? (s.dSort.dir > 0 ? '↑' : '↓') : '', onClick: () => this.setState({ dSort: !on ? { k, dir: 1 } : s.dSort.dir > 0 ? { k, dir: -1 } : null }) }; }),
+      dRows: rows.map(r => ({ acc: r.acc, env: r.env, geo: r.geo, lat: r.lat.toFixed(2), lon: r.lon.toFixed(2), year: r.year, bg: s.dSel === r.id ? 'var(--accSoft)' : 'transparent', dot: s.dSel === r.id ? 'var(--rep)' : 'var(--acc)', onClick: () => focus(r.id), onEnter: () => {} })),
+      dNone: rows.length === 0,
+      dExport: () => this.dlFile('firma_aislamientos_' + s.org + '.tsv', ['accesion\tambiente\tlocalidad\tlatitud\tlongitud\tanio', ...rows.map(r => [r.acc, r.env, r.geo, r.lat, r.lon, r.year].join('\t'))].join('\n'))
+    };
+  }
+
+  orgVals() {
+    const s = this.state, C = Component, sp = C.SP[s.org], q = s.oq.trim().toLowerCase();
+    const groups = [['Bacillales', ['Bsub', 'Bamy', 'Blic', 'Bpum', 'Bcer', 'Bant', 'Bthu', 'Gkau', 'Lmon', 'Saur']], ['Lactobacillales', ['Llac', 'Spne', 'Efae', 'Lpla']], ['Clostridia', ['Cdif', 'Cace']]];
+    const orgGroups = groups.map(([title, ids]) => ({ title, items: ids.filter(id => !q || (C.SP[id][3] + ' ' + C.SP[id][1]).toLowerCase().includes(q)).map(id => {
+      const on = id === s.org, cur = id === 'Bsub', n = this.orgEdges(id).length;
+      return { name: C.SP[id][3], strain: C.SP[id][1], meta: `${n} interacciones · ${C.TF.filter(t => this.tfPresent(id, t[0])).length} reguladores`,
+        tag: cur ? 'curado' : 'inferido', tagBg: cur ? 'var(--accSoft)' : 'var(--soft)', tagFg: cur ? 'var(--acc)' : 'var(--mute)',
+        bg: on ? 'var(--accSoft)' : 'transparent', fg: on ? 'var(--acc)' : 'var(--ink)', fw: on ? 600 : 400, onClick: () => this.setOrg(id) };
+    }) })).filter(g => g.items.length);
+    const inferred = s.org !== 'Bsub';
+    return {
+      orgNoteVis: inferred ? 'visible' : 'hidden', orgShort: sp[0], orgStrain: sp[1], orgName: sp[3], orgOpen: s.orgOpen, oRef: this.oRef, oq: s.oq,
+      toggleOrg: () => this.setState({ orgOpen: !s.orgOpen, oq: '' }, () => this.oRef.current && this.oRef.current.focus()), closeOrg: () => this.setState({ orgOpen: false }),
+      onOQ: e => this.setState({ oq: e.target.value }), orgGroups, orgNone: !orgGroups.length,
+      orgFoot: '16 genomas en esta versión de ejemplo', orgToFilo: () => { this.setState({ orgOpen: false }); this.go('filo', { fSel: { sp: s.org } }); },
+      orgBtnBg: s.orgOpen ? 'var(--soft)' : 'var(--bg)', orgDot: inferred ? 'var(--mute)' : 'var(--acc)',
+      orgInferred: inferred, orgNote: inferred ? `Interacciones y rutas de ${sp[0]} inferidas por homología desde B. subtilis 168, salvo las marcadas como experimentales.` : ''
+    };
+  }
+
+  rutasVals() {
+    const s = this.state, D = this.data, C = Component;
+    const sym = t => t === 'a' ? '→' : t === 'd' ? '±' : '⊣', col = t => t === 'a' ? 'var(--act)' : t === 'd' ? 'var(--dual)' : 'var(--rep)';
+    const pw = C.PW.find(p => p.id === s.pw), N = pw.enz.length, rows = [];
+    const orgEnz = p => p.enz.map(z => { const pr = this.genePresent(s.org, z[0]); return [z[0], z[1], z[2], pr ? z[3].filter(r => this.tfPresent(s.org, r[0])).map(r => [r[0], r[1], s.org === 'Bsub' ? r[2] : (r[2] === 'p' ? 'p' : 'h')]) : [], pr]; });
+    const enz = orgEnz(pw);
+    const focusTf = s.rhov || s.rtf, hs = s.hstep;
+    const setStep = i => this.setState({ step: i, rtf: null });
+    pw.mets.forEach((m, i) => {
+      const near = s.step != null && (i === s.step || i === s.step + 1), nearH = hs != null && (i === hs || i === hs + 1), end = i === 0 || i === pw.mets.length - 1;
+      rows.push({ isMet: true, isEnz: false, label: m, side: pw.side[i] || '', hasSide: !!pw.side[i], op: focusTf ? 0.5 : 1,
+        bd: near ? 'var(--acc)' : nearH ? 'var(--ink)' : end ? 'var(--ink)' : 'var(--line2)', bg: near ? 'var(--accSoft)' : 'var(--bg)', fg: near ? 'var(--acc)' : 'var(--ink)', fw: end || near ? 600 : 400 });
+      const z = enz[i]; if (!z) return;
+      const present = z[4], regs = z[3], on = s.step === i, hov = hs === i, hit = focusTf && regs.some(r => r[0] === focusTf);
+      rows.push({ isMet: false, isEnz: true, gene: z[0], ec: z[1], op: focusTf && !hit ? 0.3 : 1,
+        band: on ? 'var(--accSoft)' : hov ? 'var(--soft)' : 'transparent', line: on || hit ? 'var(--acc)' : 'var(--ink)',
+        chipBg: on ? 'var(--acc)' : regs.length ? 'var(--accSoft)' : 'var(--bg)', chipFg: on ? 'var(--onAcc)' : !present ? 'var(--mute)' : regs.length ? 'var(--acc)' : 'var(--ink)', chipBd: on ? 'var(--acc)' : regs.length ? 'transparent' : 'var(--line2)', strike: present ? 'none' : 'line-through',
+        line2: 0,
+        onClick: () => setStep(on ? null : i), onEnter: () => this.setState({ hstep: i }), onLeave: () => this.setState({ hstep: null }),
+        showRegs: s.showReg && regs.length > 0, regVis: s.showReg && regs.length ? 'visible' : 'hidden',
+        regs: regs.map(([tf, t, ev]) => ({ label: `${D.nodes[tf].label} ${sym(t)}`, color: col(t), line: ev === 'p' ? 'dashed' : ev === 'h' ? 'dotted' : 'solid', bg: focusTf === tf ? (t === 'a' ? 'var(--actSoft)' : 'var(--repSoft)') : 'var(--bg)',
+          onClick: e => { e.stopPropagation(); this.openInNet(tf, z[0]); }, onEnter: () => this.setState({ rhov: tf }), onLeave: () => this.setState({ rhov: null }) })) });
+    });
+    const regMap = {};
+    enz.forEach(z => z[3].forEach(([tf, t]) => { (regMap[tf] = regMap[tf] || { t, genes: [] }).genes.push(z[0]); }));
+    const st = s.step != null && enz[s.step];
+    const opName = o => o === 'OPG' ? C.OP_GAP : o;
+    const segs = p => orgEnz(p).map(z => ({ c: !z[4] ? 'transparent' : z[3].length ? 'var(--acc)' : 'var(--line)', bd: z[4] ? 'none' : '1px dashed var(--line2)' }));
+    const rNarrow = (s.ww || window.innerWidth) < 1200;
+    return {
+      hasAbsent: enz.some(z => !z[4]),
+      rNarrow, rTitleDisp: rNarrow ? 'none' : 'block', rListDisp: rNarrow ? 'none' : 'flex', rGrid: rNarrow ? 'minmax(0,1fr) minmax(260px,320px)' : 'minmax(210px,250px) minmax(0,1fr) minmax(280px,350px)',
+      pwList: C.PW.map(p => { const on = p.id === s.pw, nr = orgEnz(p).filter(z => z[3].length).length; return { label: p.title, keggId: p.keggId, seg: segs(p), sub: `${nr} de ${p.enz.length} pasos regulados`, bg: on ? 'var(--accSoft)' : 'transparent', fg: on ? 'var(--acc)' : 'var(--ink)', onClick: () => this.setState({ pw: p.id, step: null, rtf: null, hstep: null }) }; }),
+      pw: { title: pw.title, kegg: 'https://www.kegg.jp/pathway/' + pw.keggId, keggId: pw.keggId, hasMeta: !!pw.meta, meta: pw.meta || '' },
+      rows, toggleReg: () => this.setState({ showReg: !s.showReg }), regTrack: s.showReg ? 'var(--acc)' : 'var(--line2)', regKnob: s.showReg ? '16px' : '2px',
+      hasStep: !!st, noStep: !st, clearStep: () => this.setState({ step: null }),
+      st: st ? { gene: st[0], ec: st[1], ecUrl: 'https://www.kegg.jp/entry/ec:' + st[1], from: pw.mets[s.step], to: pw.mets[s.step + 1], num: s.step + 1, total: N,
+        prev: () => s.step > 0 && setStep(s.step - 1), next: () => s.step < N - 1 && setStep(s.step + 1), prevOp: s.step > 0 ? 1 : 0.35, nextOp: s.step < N - 1 ? 1 : 0.35,
+        opGenes: (() => { const o = opName(st[2]), parts = o.split('-'); const pre = parts[0].replace(/[A-Z]+$/, ''); return parts.map((g, i) => { const name = i && g.length <= 2 ? pre + g : g; return { l: name, bg: name === st[0] ? 'var(--acc)' : 'var(--soft)', fg: name === st[0] ? 'var(--onAcc)' : 'var(--ink)' }; }); })(),
+        regN: st[3].length, noRegs: !st[3].length, absent: !st[4], noRegTxt: st[4] ? 'Sin regulación transcripcional registrada.' : `Sin ortólogo de ${st[0]} en este genoma.`,
+        regs: st[3].map(([tf, t, ev]) => ({ label: D.nodes[tf].label + ' ' + sym(t), color: col(t), ev: ({ e: 'experimental', p: 'predicha', h: 'homología' })[ev], onClick: () => this.openInNet(tf, st[0]) })) } : {},
+      pwStats: [[enz.filter(z => z[4]).length + '/' + N, 'pasos'], [enz.filter(z => z[3].length).length, 'regulados'], [Object.keys(regMap).length, 'factores']].map(([n, l]) => ({ n, l })),
+      pwStrip: enz.map((z, i) => ({ t: z[0], c: (focusTf ? z[3].some(r => r[0] === focusTf) : z[3].length) ? 'var(--acc)' : 'var(--line)', tr: hs === i ? 'scaleY(1.25)' : 'none', onClick: () => setStep(i), onEnter: () => this.setState({ hstep: i }), onLeave: () => this.setState({ hstep: null }) })),
+      pwRegs: Object.entries(regMap).map(([tf, r]) => ({ label: D.nodes[tf].label, typeLabel: r.t === 'a' ? '→ activa' : '⊣ reprime', color: col(r.t), genes: r.genes.join(', '),
+        bd: s.rtf === tf ? 'var(--acc)' : 'var(--line)', bg: s.rhov === tf || s.rtf === tf ? 'var(--accSoft)' : 'var(--bg)',
+        onClick: () => this.setState({ rtf: s.rtf === tf ? null : tf, step: null }), onEnter: () => this.setState({ rhov: tf }), onLeave: () => this.setState({ rhov: null }) })),
+      hasPwRegs: Object.keys(regMap).length > 0,
+      pwToNet: () => { const tfs = Object.keys(regMap); this.go('redes', { sel: tfs, edge: null, fitIds: new Set(tfs.flatMap(t => [t, ...D.nodes[t].out.map(e => e.t)])) }); }
+    };
+  }
+
+  filoVals() {
+    const s = this.state, C = Component, D = this.data, T = this.tree;
+    const tfs = C.TF.map(t => t[0]), sps = Object.keys(C.SP);
+    let order = tfs.map((t, j) => j);
+    if (s.fSort === 'cons') order = [...order].sort((a, b) => sps.filter(x => C.PRES[x][b] === '1').length - sps.filter(x => C.PRES[x][a] === '1').length);
+    const rowH = 26, top = 96, dx = 22, x0 = 14, cw = 34;
+    const leafX = x0 + T.maxD * dx, labelX = leafX + 10, mx = labelX + 250;
+    const coll = new Set(s.collapsed), rows = [], paths = [], dots = [];
+    const place = n => {
+      if (n.leaf || coll.has(n.id)) { n.y = top + rows.length * rowH + rowH / 2; n.x = n.leaf ? leafX : x0 + n.depth * dx; rows.push(n); return; }
+      n.kids.forEach(place); n.x = x0 + n.depth * dx; n.y = (n.kids[0].y + n.kids[n.kids.length - 1].y) / 2;
+    };
+    place(T.root);
+    paths.push({ d: `M${x0 - 10},${T.root.y} H${T.root.x}`, fill: 'none' });
+    const walk = n => {
+      if (n.leaf) return;
+      const isC = coll.has(n.id);
+      if (isC) paths.push({ d: `M${n.x},${n.y} L${leafX},${n.y - 8} L${leafX},${n.y + 8} Z`, fill: 'var(--soft)' });
+      else {
+        paths.push({ d: `M${n.x},${n.kids[0].y} V${n.kids[n.kids.length - 1].y}`, fill: 'none' });
+        n.kids.forEach(c => { paths.push({ d: `M${n.x},${c.y} H${c.leaf ? leafX : c.x}`, fill: 'none' }); walk(c); });
+      }
+      dots.push({ x: n.x, y: n.y, label: !isC && n.name ? React.createElement('text', { x: n.x + 5, y: n.y - 6, fontSize: 10, style: { fill: 'var(--mute)', pointerEvents: 'none' } }, n.name) : null, fill: isC ? 'var(--acc)' : 'var(--bg)', onClick: () => this.setState({ collapsed: isC ? s.collapsed.filter(x => x !== n.id) : [...s.collapsed, n.id] }) });
+    };
+    walk(T.root);
+    const fh = s.fh, fs = s.fSel || {};
+    const fRows = rows.map(n => {
+      const members = n.leaf ? [n.id] : this.leaves(n).map(l => l.id);
+      const vals = order.map(j => { const vs = members.map(m => this.ident(m, j)).filter(v => v > 0); return { v: vs.length ? Math.round(vs.reduce((a, b) => a + b, 0) / vs.length) : 0, frac: vs.length / members.length, j }; });
+      const rowSel = n.leaf && (fs.sp ? fs.sp === n.id : n.id === s.org), rowHov = fh && fh.r === n.id;
+      const name = n.leaf ? C.SP[n.id][0] + ' ' : (n.name || 'Clado') + ' ';
+      return {
+        by: n.y - rowH / 2, bh: rowH, bandOp: rowSel ? 1 : rowHov ? 0.6 : 0,
+        lx: labelX, ly: n.y + 4, fst: n.leaf ? 'italic' : 'normal', fw: n.leaf ? (rowSel ? 700 : 400) : 600, lc: rowSel ? 'var(--acc)' : 'var(--ink)',
+        label: React.createElement('text', { x: labelX, y: n.y + 4, fontSize: 12, fontStyle: n.leaf ? 'italic' : 'normal', fontWeight: n.leaf ? (rowSel ? 700 : 400) : 600, style: { fill: rowSel ? 'var(--acc)' : 'var(--ink)', cursor: 'pointer' }, onClick: () => n.leaf ? this.setState({ fSel: rowSel && !fs.tf ? null : { sp: n.id } }) : this.setState({ collapsed: s.collapsed.filter(x => x !== n.id) }) }, name, React.createElement('tspan', { style: { fill: 'var(--mute)', fontStyle: 'normal', fontWeight: 400 } }, n.leaf ? C.SP[n.id][1] : `(${members.length})`)),
+        onClick: () => n.leaf ? this.setState({ fSel: rowSel && !fs.tf ? null : { sp: n.id } }) : this.setState({ collapsed: s.collapsed.filter(x => x !== n.id) }),
+        cells: vals.map((c, ci) => {
+          const tf = tfs[c.j], isSel = n.leaf && fs.sp === n.id && fs.tf === tf;
+          return { x: mx + ci * cw + 3, y: n.y - rowH / 2 + 3, w: cw - 6, h: rowH - 6,
+            fill: c.v ? 'var(--acc)' : 'transparent', fo: c.v ? ((0.15 + 0.85 * (c.v - 25) / 75) * (0.4 + 0.6 * c.frac)).toFixed(3) : 0,
+            st: isSel ? 'var(--ink)' : c.v ? 'none' : 'var(--line2)', sw: isSel ? 2 : 1,
+            onEnter: () => this.setState({ fh: { r: n.id, c: tf, v: c.v, frac: c.frac, name: n.leaf ? C.SP[n.id][3] : n.name, n: members.length } }),
+            onClick: () => n.leaf ? this.setState({ fSel: { sp: n.id, tf } }) : this.setState({ collapsed: s.collapsed.filter(x => x !== n.id) }) };
+        })
+      };
+    });
+    const nRows = rows.length;
+    const fCols = order.map((j, ci) => {
+      const tf = tfs[j], selC = fs.tf === tf && !fs.sp, hov = fh && fh.c === tf;
+      const x = mx + ci * cw + cw / 2 - 3, y = top - 10;
+      return { bx: mx + ci * cw, by: top - 4, bw: cw, bh: nRows * rowH + 8, bandOp: selC ? 1 : hov ? 0.6 : 0,
+        text: React.createElement('text', { x, y, fontSize: 12, fontWeight: selC || hov ? 700 : 500, transform: `rotate(-55 ${x} ${y})`, style: { fill: selC ? 'var(--acc)' : 'var(--ink)', cursor: 'pointer' }, onClick: () => this.setState({ fSel: selC ? null : { tf } }) }, D.nodes[tf].label) };
+    });
+    let fInfo = 'Pasa el cursor sobre la matriz · clic en un nodo del árbol para colapsar o expandir';
+    if (fh) fInfo = `${fh.name}${fh.n > 1 ? ` (${fh.n})` : ''} × ${D.nodes[fh.c].label}: ` + (fh.v ? (fh.n > 1 ? `${Math.round(fh.frac * fh.n)}/${fh.n} con ortólogo · media ${fh.v} %` : `${fh.v} % identidad`) : 'sin ortólogo');
+    let fp = null;
+    if (fs.sp) {
+      const sp = C.SP[fs.sp], list = tfs.map((t, j) => ({ t, v: this.ident(fs.sp, j) }));
+      const j = fs.tf ? tfs.indexOf(fs.tf) : -1, cv = j >= 0 ? this.ident(fs.sp, j) : 0;
+      fp = { canUse: fs.sp !== s.org, useOrg: () => this.setOrg(fs.sp), kind: fs.tf ? 'Ortólogo' : 'Especie', title: fs.tf ? `${D.nodes[fs.tf].label} en ${sp[0]}` : sp[3], fst: fs.tf ? 'normal' : 'italic', sub: `Cepa ${sp[1]} · ${sp[2] ? 'esporulante' : 'no esporulante'}`,
+        hasCell: !!fs.tf, cellVal: cv ? cv + ' %' : 'Ausente', cellNote: cv ? 'identidad respecto al ortólogo de B. subtilis 168' : 'sin ortólogo detectado en este genoma',
+        listTitle: `Reguladores presentes · ${list.filter(x => x.v).length}/${tfs.length}`,
+        list: list.map(x => ({ label: D.nodes[x.t].label, fst: 'normal', pct: x.v + '%', val: x.v ? x.v + ' %' : '—', onClick: () => this.setState({ fSel: { sp: fs.sp, tf: x.t } }) })),
+        canNet: !!fs.tf, netLabel: fs.tf ? D.nodes[fs.tf].label : '', toNet: () => fs.tf && this.openInNet(fs.tf) };
+    } else if (fs.tf) {
+      const j = tfs.indexOf(fs.tf), list = sps.map(sp => ({ sp, v: this.ident(sp, j) }));
+      fp = { canUse: false, kind: 'Regulador', title: D.nodes[fs.tf].label, fst: 'normal', sub: C.MOD[D.nodes[fs.tf].mod], hasCell: false,
+        listTitle: `Genomas con ortólogo · ${list.filter(x => x.v).length}/${sps.length}`,
+        list: list.map(x => ({ label: C.SP[x.sp][3], fst: 'italic', pct: x.v + '%', val: x.v ? x.v + ' %' : '—', onClick: () => this.setState({ fSel: { sp: x.sp, tf: fs.tf } }) })),
+        canNet: true, netLabel: D.nodes[fs.tf].label, toNet: () => this.openInNet(fs.tf) };
+    }
+    return {
+      fW: mx + order.length * cw + 16, fH: top + nRows * rowH + 12, fRows, fCols, fPaths: paths, fNodes: dots, fInfo,
+      fLeave: () => this.setState({ fh: null }),
+      fSortOpts: [['mod', 'Por módulo'], ['cons', 'Por conservación']].map(([v, l]) => ({ label: l, bg: s.fSort === v ? 'var(--bg)' : 'transparent', fg: s.fSort === v ? 'var(--ink)' : 'var(--mute)', onClick: () => this.setState({ fSort: v }) })),
+      fHasCollapsed: s.collapsed.length > 0, fExpandAll: () => this.setState({ collapsed: [] }),
+      fDownload: () => this.dlFile('firma_conservacion.tsv', ['especie\tcepa\t' + tfs.join('\t'), ...sps.map(sp => [C.SP[sp][3], C.SP[sp][1], ...tfs.map((t, j) => this.ident(sp, j))].join('\t'))].join('\n')),
+      fScale: [30, 50, 70, 85, 100].map(v => ({ l: v, op: (0.15 + 0.85 * (v - 25) / 75).toFixed(2) })),
+      fViewOpts: [['tree', 'Árbol y matriz'], ['tax', 'Taxonomía']].map(([v, l]) => ({ label: l, bg: s.fView === v ? 'var(--bg)' : 'transparent', fg: s.fView === v ? 'var(--ink)' : 'var(--mute)', onClick: () => this.setState({ fView: v }) })),
+      fIsTree: s.fView === 'tree', fIsTax: s.fView === 'tax',
+      fAsideDisp: s.fView === 'tax' && !fp ? 'none' : 'flex',
+      fGrid: s.fView === 'tax' && !fp ? 'minmax(0,1fr)' : 'minmax(0,1fr) minmax(260px,320px)',
+      fEmpty: !fp, fHasSel: !!fp, fp: fp || {}, fClear: () => this.setState({ fSel: null })
+    };
+  }
+
+  tablaVals() {
+    const s = this.state, defs = this.tableDefs(), d = defs[s.tb];
+    const visIdx = d.cols.map((c, i) => i).filter(i => !s.tHidden.includes(s.tb + i));
+    const rows = this.tableRows(d), PS = 20, pages = Math.max(1, Math.ceil(rows.length / PS)), pg = Math.min(s.tPage, pages - 1);
+    const pageRows = rows.slice(pg * PS, pg * PS + PS), selSet = new Set(s.tSel);
+    const grid = '40px ' + visIdx.map(i => { const c = d.cols[i]; return c.n ? `minmax(64px,${c.w || 0.7}fr)` : `minmax(${c.mw || 120}px,${c.w || 1}fr)`; }).join(' ');
+    const minW = 40 + visIdx.reduce((a, i) => a + (d.cols[i].n ? 64 : (d.cols[i].mw || 120)), 0) + 'px';
+    const out = (list) => [visIdx.map(i => d.cols[i].l).join('\t'), ...list.map(r => visIdx.map(i => r.v[i]).join('\t'))].join('\n');
+    const chosen = s.tSel.length ? rows.filter(r => selSet.has(r.id)) : rows;
+    const allOn = rows.length > 0 && rows.every(r => selSet.has(r.id));
+    const reset = { tF: {}, tSort: null, tPage: 0, tSel: [], tq: '', tColsOpen: false };
+    return {
+      tTabs: Object.entries(defs).map(([k, t]) => ({ label: t.label, bd: s.tb === k ? 'var(--ink)' : 'transparent', fg: s.tb === k ? 'var(--ink)' : 'var(--mute)', fw: s.tb === k ? 600 : 400, onClick: () => this.setState({ tb: k, ...reset }) })),
+      tq: s.tq, onTQ: e => this.setState({ tq: e.target.value, tPage: 0 }),
+      tSelInfo: s.tSel.length ? `${s.tSel.length} ${s.tSel.length === 1 ? 'fila seleccionada' : 'filas seleccionadas'}` : '',
+      tHasFilters: !!(s.tq || Object.keys(s.tF).some(k => k.startsWith(s.tb) && s.tF[k])), tClearFilters: () => this.setState({ tF: {}, tq: '', tPage: 0 }),
+      tToggleCols: () => this.setState({ tColsOpen: !s.tColsOpen }), tColsOpen: s.tColsOpen,
+      tColOpts: d.cols.map((c, i) => { const on = !s.tHidden.includes(s.tb + i); return { label: c.l, chk: on ? '✓' : '', bg: on ? 'var(--ink)' : 'transparent', onClick: () => this.setState({ tHidden: on ? [...s.tHidden, s.tb + i] : s.tHidden.filter(x => x !== s.tb + i) }) }; }),
+      tCopyLabel: s.tCopied ? 'Copiado ✓' : 'Copiar',
+      tCopy: () => { try { navigator.clipboard.writeText(out(chosen)); } catch (e) {} this.setState({ tCopied: true }); setTimeout(() => this.setState({ tCopied: false }), 1400); },
+      tExportLabel: s.tSel.length ? `Exportar ${s.tSel.length} filas` : 'Exportar TSV',
+      tExport: () => this.dlFile(d.file, out(chosen)),
+      tMinW: minW, tGrid: grid,
+      tAllBg: allOn ? 'var(--ink)' : 'transparent', tAllChk: allOn ? '✓' : '', tAll: () => this.setState({ tSel: allOn ? [] : rows.map(r => r.id) }),
+      tHead: visIdx.map(i => {
+        const c = d.cols[i], sorted = s.tSort && s.tSort.tb === s.tb && s.tSort.k === i;
+        return { label: c.l, arrow: sorted ? (s.tSort.dir > 0 ? '↑' : '↓') : '', jc: c.n ? 'flex-end' : 'flex-start', fg: sorted ? 'var(--acc)' : 'var(--ink)', ta: c.n ? 'right' : 'left',
+          onClick: () => this.setState({ tSort: !sorted ? { tb: s.tb, k: i, dir: 1 } : s.tSort.dir > 0 ? { tb: s.tb, k: i, dir: -1 } : null }),
+          fv: s.tF[s.tb + i] || '', ph: c.n ? '>50' : 'filtrar', onF: e => this.setState({ tF: { ...s.tF, [s.tb + i]: e.target.value }, tPage: 0 }) };
+      }),
+      tRows: pageRows.map(r => {
+        const on = selSet.has(r.id);
+        return { bg: on ? 'var(--accSoft)' : 'transparent', chk: on ? '✓' : '', chkBg: on ? 'var(--ink)' : 'transparent', onOpen: r.go,
+          onToggle: e => { e.stopPropagation(); this.setState({ tSel: on ? s.tSel.filter(x => x !== r.id) : [...s.tSel, r.id] }); },
+          cells: visIdx.map(i => {
+            const c = d.cols[i], v = r.v[i];
+            const fg = c.tag ? (v === 'Activación' ? 'var(--act)' : v === 'Dual' ? 'var(--dual)' : 'var(--rep)') : v === 'Predicha' || v === '—' ? 'var(--mute)' : 'var(--ink)';
+            return { t: v, ta: c.n ? 'right' : 'left', fg, fw: c.b || c.tag ? 600 : 400, fst: c.i || (c.gi && /^[a-z]/.test(String(v))) ? 'italic' : 'normal' };
+          }) };
+      }),
+      tNoRows: rows.length === 0,
+      tCapTitle: d.capT, tCap: d.cap,
+      tRange: rows.length ? `${pg * PS + 1}–${Math.min(rows.length, pg * PS + PS)} de ${rows.length}` : '0 de 0',
+      tPrevOp: pg > 0 ? 1 : 0.35, tNextOp: pg < pages - 1 ? 1 : 0.35,
+      tPrev: () => pg > 0 && this.setState({ tPage: pg - 1 }), tNext: () => pg < pages - 1 && this.setState({ tPage: pg + 1 })
+    };
+  }
+
+  netVals() {
+    const s = this.state, D = this.data, C = Component;
+    const labelsAll = (this.props.labels ?? 'Todas') === 'Todas';
+    const { edges: vis, ids } = this.visible();
+    const deg = {}; vis.forEach(e => { deg[e.s] = (deg[e.s] || 0) + 1; });
+    const sym = t => t === 'a' ? '→' : t === 'd' ? '±' : '⊣', col = t => t === 'a' ? 'var(--act)' : t === 'd' ? 'var(--dual)' : 'var(--rep)';
+    let focus = null, activeE = null;
+    const touch = set => { focus = new Set(set); activeE = new Set(); vis.forEach(e => { if (set.has(e.s) || set.has(e.t)) { activeE.add(e.id); focus.add(e.s); focus.add(e.t); } }); };
+    if (s.edge) { const e = D.edges.find(x => x.id === s.edge); focus = new Set([e.s, e.t]); activeE = new Set([e.id]); }
+    else if (s.sel.length) touch(new Set(s.sel));
+    else if (s.hover) touch(new Set([s.hover]));
+    const zs = 1 / Math.min(1, s.view.k), zl = Math.min(1.4, zs), far = s.view.k < 0.7;
+    const R = n => (n.kind === 'tf' ? 8 + Math.min(4, (deg[n.id] || 0) * 0.5) : 5) * zs;
+    const pairN = {}; vis.forEach(e => { const k = [e.s, e.t].sort().join('|'); pairN[k] = (pairN[k] || 0) + 1; });
+    const edges = vis.map(e => {
+      const a = D.nodes[e.s], b = D.nodes[e.t], ra = R(a) + 1 * zs, rb = R(b) + (e.type === 'a' ? 1 : e.type === 'd' ? 2 : 3) * zs;
+      const ax = a.px, ay = a.py, bx = b.px, by = b.py, multi = pairN[[e.s, e.t].sort().join('|')] > 1;
+      const st = s.netEdge === 'straight' && multi ? 'bezier' : s.netEdge;
+      const dpath = this.edgePath(ax, ay, bx, by, { style: st, ra, rb, curv: st === 'bezier' ? (s.netEdge === 'straight' ? 0.1 : 0.12) : 0, off: st === 'taxi' && multi ? (e.s < e.t ? 7 : -7) * zs : 0, radius: 8 * zs });
+      const on = activeE ? activeE.has(e.id) : false;
+      return {
+        d: dpath,
+        color: col(e.type), w: (s.edge === e.id ? 2.6 : on ? 1.6 : 1.1) * zs, dash: (x => x === 'p' ? `${4 * zs} ${3 * zs}` : x === 'h' ? `${1.2 * zs} ${2.6 * zs}` : 'none')(this.evOf(e)), hit: 12 * zs,
+        on, marker: e.type === 'a' ? 'url(#mAct)' : e.type === 'd' ? 'url(#mDual)' : 'url(#mRep)', op: activeE ? (on ? 1 : 0.07) : 0.55,
+        onDown: ev => { ev.stopPropagation(); this.selectEdge(e.id); }
+      };
+    });
+    const selSet = new Set(s.sel), ovLab = [];
+    const nodes = D.list.filter(n => ids.has(n.id)).sort((a, b) => (a.kind === 'tf') - (b.kind === 'tf')).map(n => {
+      const r = R(n), tf = n.kind === 'tf', sel = selSet.has(n.id) || (s.edge && focus && focus.has(n.id)), hov = s.hover === n.id;
+      const show = tf || labelsAll || (focus && focus.has(n.id)) || s.hover === n.id;
+      return {
+        x: n.px, y: n.py, r: hov ? r * 1.15 : r, ring: r + 4 * zs, rw: 1.6 * zs, ringOp: sel ? 1 : 0, sw: 1.4 * zs,
+        fill: tf ? 'var(--acc)' : (sel ? 'var(--accSoft)' : 'var(--bg)'), stroke: tf ? 'var(--acc)' : (sel ? 'var(--acc)' : 'var(--ink)'),
+        op: focus ? (focus.has(n.id) ? 1 : 0.12) : 1,
+        label: null, _ov: show && ovLab.push(React.createElement('text', { key: n.id, x: s.view.k * (n.px + r) + s.view.tx + 5, y: s.view.k * n.py + s.view.ty + 4, fontSize: tf ? 12 : 11, fontWeight: tf || sel ? 700 : 400, fontStyle: tf ? 'normal' : 'italic', style: { fill: tf || sel ? 'var(--acc)' : 'var(--ink)', pointerEvents: 'none', paintOrder: 'stroke', stroke: 'var(--bg2)', strokeWidth: 3, strokeLinejoin: 'round' } }, n.label)),
+        onDown: ev => { ev.stopPropagation(); this.drag = { id: n.id, sx: ev.clientX, sy: ev.clientY, moved: false, shift: ev.shiftKey }; n.sx0 = n.x; n.sy0 = n.y; this.svgRef.current.setPointerCapture(ev.pointerId); },
+        onEnter: () => !this.drag && this.setState({ hover: n.id }),
+        onLeave: () => !this.drag && this.setState({ hover: null })
+      };
+    });
+    const res = s.q.trim() ? D.list.filter(n => [n.id, n.label, n.operon].some(x => x.toLowerCase().includes(s.q.trim().toLowerCase()))).slice(0, 7) : [];
+    const pick = n => { this.setState({ sel: [n.id], edge: null, q: '', qOpen: false, qi: 0 }); this.centerOn(n.id); this.qRef.current && this.qRef.current.blur(); };
+    const modules = Object.keys(C.MOD).map(m => {
+      const tfs = C.TF.filter(t => t[1] === m && this.tfPresent(s.org, t[0])).map(t => D.nodes[t[0]]);
+      return { name: C.MOD[m], count: tfs.length, onClick: () => this.openModule(m),
+        regs: tfs.map(t => ({ label: t.label, deg: deg[t.id] || 0, bg: selSet.has(t.id) ? 'var(--acc)' : 'transparent', fg: selSet.has(t.id) ? 'var(--onAcc)' : 'var(--ink)', onClick: ev => this.clickNode(t.id, ev.shiftKey), onEnter: () => this.setState({ hover: t.id }), onLeave: () => this.setState({ hover: null }) })) };
+    });
+    const evLabel = e => ({ e: 'experimental', p: 'predicha', h: 'homología' })[this.evOf(e)];
+    let nd = null;
+    if (!s.edge && s.sel.length === 1) {
+      const n = D.nodes[s.sel[0]], vout = n.out.filter(e => vis.includes(e)), vin = n.inn.filter(e => vis.includes(e));
+      const row = (e, other) => ({ label: D.nodes[other].label, fst: D.nodes[other].kind === 'gene' ? 'italic' : 'normal', sym: sym(e.type), color: col(e.type), ev: evLabel(e), onClick: () => this.selectEdge(e.id), onEnter: () => this.setState({ hover: other }), onLeave: () => this.setState({ hover: null }) });
+      const paths = C.PW.filter(p => p.enz.some(z => z[0] === n.id || z[3].some(r => r[0] === n.id)));
+      nd = { kind: n.kind === 'tf' ? 'Regulador' : 'Gen', fst: n.kind === 'gene' ? 'italic' : 'normal', label: n.label, operon: n.operon, mod: C.MOD[n.mod],
+        hasOut: vout.length > 0, outN: vout.length, hasIn: vin.length > 0, inN: vin.length,
+        out: vout.map(e => row(e, e.t)), inn: vin.map(e => row(e, e.s)),
+        hasPaths: paths.length > 0, paths: paths.map(p => ({ label: p.title, onClick: () => { const i = p.enz.findIndex(z => z[0] === n.id); this.go('rutas', { pw: p.id, step: i >= 0 ? i : null, rtf: n.kind === 'tf' ? n.id : null }); } })),
+        isTf: n.kind === 'tf', toFilo: () => this.go('filo', { fSel: { tf: n.id } }) };
+    }
+    let shared = [];
+    if (!s.edge && s.sel.length > 1) {
+      const by = {}; vis.filter(e => selSet.has(e.s)).forEach(e => { (by[e.t] = by[e.t] || []).push(e); });
+      shared = Object.entries(by).filter(([, es]) => es.length > 1).map(([t, es]) => ({ label: D.nodes[t].label, detail: es.map(e => D.nodes[e.s].label + ' ' + sym(e.type)).join('  '), onClick: () => this.setState({ sel: [t], edge: null }) }));
+    }
+    let ed = null;
+    if (s.edge) {
+      const e = D.edges.find(x => x.id === s.edge), m = C.MOTIF[e.s];
+      ed = { src: D.nodes[e.s].label, tgt: D.nodes[e.t].label, tfst: D.nodes[e.t].kind === 'gene' ? 'italic' : 'normal', sym: sym(e.type), color: col(e.type),
+        typeLabel: e.type === 'a' ? 'Activación' : e.type === 'd' ? 'Dual · activa o reprime según condición' : 'Represión', typeBg: e.type === 'a' ? 'var(--actSoft)' : e.type === 'd' ? 'var(--dualSoft)' : 'var(--repSoft)',
+        evLabel: ({ e: 'Experimental', p: 'Predicha', h: 'Homología · desde B. subtilis' })[this.evOf(e)], operon: D.nodes[e.t].operon, sigma: 'σ' + e.sig,
+        cond: C.COND[e.cond], mod: C.MOD[D.nodes[e.s].mod], hasMotif: !!m, motifName: m ? m[0] : '', motif: m ? m[1] : '',
+        goSrc: () => this.setState({ sel: [e.s], edge: null }), goTgt: () => this.setState({ sel: [e.t], edge: null }) };
+    }
+    const nSel = s.sel.length, sigs = [...new Set(D.edges.map(e => e.sig))].sort(), osp = C.SP[s.org];
+    const hullLab = [], hulls = !s.netGroups ? [] : Object.keys(C.MOD).map(m => {
+      const hb = this.hullBox(D, m, 'px', zl); if (!hb) return null;
+      const ns = hb[4].filter(n => this.genePresent(s.org, n.id)); if (!ns.length) return null;
+      const k = s.view.k, col = { C: 'var(--acc)', N: 'var(--t2)', S: 'var(--t3)' }[m];
+      const xs = ns.map(n => n.px), bl = { top: [(Math.min(...xs) + Math.max(...xs)) / 2, Math.min(...ns.map(n => n.py)) - 34] };
+      const dim = focus && !ns.some(n => focus.has(n.id)), hov = s.hullHov === m;
+      ovLab.push(React.createElement('text', { key: 'h' + m, x: k * bl.top[0] + s.view.tx, y: k * bl.top[1] + s.view.ty, textAnchor: 'middle', fontSize: 11, fontWeight: 700, opacity: dim ? 0.35 : 1, style: { fill: col, pointerEvents: 'none', textTransform: 'uppercase', letterSpacing: '.07em', paintOrder: 'stroke', stroke: 'var(--bg2)', strokeWidth: 3 } }, C.MOD[m]));
+      return { c: col, op: hov ? 0.26 : dim ? 0.05 : 0.15, pts: ns.map(n => ({ x: n.px, y: n.py, r: n.kind === 'tf' ? 52 : 38 })),
+        onEnter: () => this.setState({ hullHov: m }), onLeave: () => this.setState({ hullHov: null }),
+        onClick: () => { if (this.panMoved) return; this.openModule(m); } };
+    }).filter(Boolean);
+    return {
+      hulls, hullLabels: null, netOverlay: React.createElement('g', { style: { pointerEvents: 'none' } }, ovLab), flowDots: this.flowDots(edges.filter(x => x.on).slice(0, 40), zs),
+      edgeLabel: { bezier: 'Curva', straight: 'Recta', taxi: 'Ortogonal' }[s.netEdge], edgeIcon: { bezier: '⌒', straight: '╱', taxi: '⌐' }[s.netEdge],
+      cycleEdge: () => this.setState({ netEdge: { bezier: 'straight', straight: 'taxi', taxi: 'bezier' }[s.netEdge] }),
+      groupsBg: s.netGroups ? 'var(--ink)' : 'transparent', groupsChk: s.netGroups ? '✓' : '', toggleGroups: () => this.setState({ netGroups: !s.netGroups }),
+      viewBox: `0 0 ${s.vw} ${s.vh}`,
+      netFoot: s.org === 'Bsub' ? 'Datos de ejemplo · por curar con el grupo' : `Red de ${osp[0]} inferida por homología desde B. subtilis 168 · datos de ejemplo`,
+      gridCols: s.narrow || !(s.edge || nSel) ? 'minmax(200px,250px) minmax(0,1fr)' : 'minmax(220px,260px) minmax(0,1fr) minmax(280px,340px)',
+      asideDisplay: !(s.edge || nSel) ? 'none' : 'flex', asidePos: s.narrow ? 'absolute' : 'static', asideW: s.narrow ? '320px' : 'auto', asideSh: s.narrow ? '-8px 0 24px var(--shadow)' : 'none',
+      viewT: `translate(${s.view.tx},${s.view.ty}) scale(${s.view.k})`, zoomPct: Math.round(s.view.k * 100) + ' %',
+      bgCursor: this.pan && this.pan.moved ? 'grabbing' : 'default', edges, nodes, modules,
+      q: s.q, showResults: s.qOpen && res.length > 0,
+      results: res.map((n, i) => ({ label: n.label, fst: n.kind === 'gene' ? 'italic' : 'normal', kfst: n.kind === 'gene' ? 'italic' : 'normal', kind: n.kind === 'tf' ? 'regulador' : n.operon, bg: i === s.qi ? 'var(--accSoft)' : 'var(--bg)', onPick: ev => { ev.preventDefault(); pick(n); } })),
+      onQ: e => this.setState({ q: e.target.value, qi: 0, qOpen: true }), onQFocus: () => this.setState({ qOpen: true }), onQBlur: () => this.setState({ qOpen: false }),
+      onQKey: e => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); this.setState({ qi: Math.min(res.length - 1, s.qi + 1) }); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); this.setState({ qi: Math.max(0, s.qi - 1) }); }
+        else if (e.key === 'Enter' && res[s.qi]) pick(res[s.qi]);
+        else if (e.key === 'Escape') { this.setState({ q: '', qOpen: false }); e.target.blur(); }
+      },
+      toggleAct: () => this.setState({ act: !s.act }), toggleDual: () => this.setState({ dual: !s.dual }), toggleMixed: () => { this.userMoved = false; this.setState({ mixed: !s.mixed }, () => this.fitView()); },
+      dualBg: s.dual ? 'var(--dual)' : 'transparent', dualFg: s.dual ? 'var(--onAcc)' : 'var(--dual)', mixBg: s.mixed ? 'var(--ink)' : 'transparent', mixChk: s.mixed ? '✓' : '', toggleRep: () => this.setState({ rep: !s.rep }),
+      actBg: s.act ? 'var(--act)' : 'transparent', actFg: s.act ? 'var(--onAcc)' : 'var(--act)', repBg: s.rep ? 'var(--rep)' : 'transparent', repFg: s.rep ? 'var(--onAcc)' : 'var(--rep)',
+      evOpts: (s.org === 'Bsub' ? [['all', 'Todas'], ['e', 'Exp.'], ['p', 'Pred.']] : [['all', 'Todas'], ['e', 'Exp.'], ['p', 'Pred.'], ['h', 'Hom.']]).map(([v, l]) => ({ label: l, bg: s.ev === v ? 'var(--bg)' : 'transparent', fg: s.ev === v ? 'var(--ink)' : 'var(--mute)', onClick: () => this.setState({ ev: v }) })),
+      sigOpts: sigs.map(g => { const on = s.sig.includes(g); return { label: 'σ' + g, bg: on ? 'var(--ink)' : 'transparent', fg: on ? 'var(--bg)' : 'var(--ink)', onClick: () => this.setState({ sig: on ? s.sig.filter(x => x !== g) : [...s.sig, g] }) }; }),
+      summary: s.edge ? '1 interacción' : nSel ? `${nSel} ${nSel === 1 ? 'nodo' : 'nodos'}` : '',
+      hasSel: !!(s.edge || nSel), clearSel: () => this.setState({ sel: [], edge: null }),
+      relayout: () => { this.seed += 1; this.layout(D, this.seed); this.userMoved = false; this.fitView(); },
+      download: () => { const t = this.tableDefs().int; const ok = new Set(vis.map(e => e.id)); this.dlFile('firma_red.tsv', [t.cols.map(c => c.l).join('\t'), ...t.rows.filter(r => ok.has(r.id)).map(r => r.v.join('\t'))].join('\n')); },
+      zoomIn: () => this.zoomBy(1.25), zoomOut: () => this.zoomBy(0.8), fit: () => { this.userMoved = false; this.fitView(); },
+      onBgDown: e => { this.panMoved = false; this.pan = { sx: e.clientX, sy: e.clientY, tx: s.view.tx, ty: s.view.ty, moved: false }; this.svgRef.current.setPointerCapture(e.pointerId); },
+      onMove: e => {
+        if (this.drag) {
+          if (!this.drag.moved && Math.hypot(e.clientX - this.drag.sx, e.clientY - this.drag.sy) > 3) this.drag.moved = true;
+          if (this.drag.moved) { const p = this.graphPoint(e), n = D.nodes[this.drag.id]; n.gx = p.x; n.gy = p.y; }
+        } else if (this.pan) {
+          if (!this.pan.moved && Math.hypot(e.clientX - this.pan.sx, e.clientY - this.pan.sy) > 3) this.pan.moved = true;
+          if (this.pan.moved) { this.userMoved = true; const a = this.svgRef.current.getScreenCTM().a; this.setState({ view: { ...this.state.view, tx: this.pan.tx + (e.clientX - this.pan.sx) / a, ty: this.pan.ty + (e.clientY - this.pan.sy) / a } }); }
+        }
+      },
+      onUp: () => {
+        if (this.drag) { if (!this.drag.moved) this.clickNode(this.drag.id, this.drag.shift); else { const n = D.nodes[this.drag.id]; n.gx = n.gy = undefined; n.ret = performance.now(); } this.drag = null; }
+        else if (this.pan) { this.panMoved = this.pan.moved; if (!this.pan.moved) this.setState({ sel: [], edge: null }); this.pan = null; }
+      },
+      helpOpen: s.help, toggleHelp: () => this.setState({ help: !s.help }), helpBg: s.help ? 'var(--ink)' : 'var(--bg)', helpFg: s.help ? 'var(--bg)' : 'var(--ink)', helpBd: s.help ? 'var(--ink)' : 'var(--line)',
+      helpKeys: [['Clic', 'seleccionar nodo o interacción'], ['Shift + clic', 'selección múltiple'], ['Arrastrar', 'mover nodo o desplazar'], ['Rueda', 'zoom'], ['Esc', 'limpiar selección']].map(([k, d]) => ({ k, d })),
+      isNode: !!nd, isMulti: !s.edge && nSel > 1, isEdge: !!ed, nd: nd || {}, ed: ed || {},
+      multiTitle: `${nSel} nodos seleccionados`,
+      chips: s.sel.map(id => ({ label: D.nodes[id].label, onClick: () => this.setState({ sel: s.sel.filter(x => x !== id) }) })),
+      shared, sharedN: shared.length, noShared: shared.length === 0
+    };
+  }
+}
+
+export default Component;

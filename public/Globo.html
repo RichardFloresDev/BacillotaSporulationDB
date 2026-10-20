@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FIRMA · Globo</title>
+<script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js" integrity="sha384-Ukv1p/xTma6P4/2bY5KzWBw+ydSpXmhCMtyciIQVDJ1RmOxtCYNMF1uXT9T63H67" crossorigin="anonymous"></script>
+<style>
+@font-face{font-family:'Paper Mono';src:url('fonts/PaperMono-VF.woff2') format('woff2');font-weight:100 800;font-display:swap}
+html,body{margin:0;height:100%;overflow:hidden;font-family:'Paper Mono',ui-monospace,monospace;-webkit-font-smoothing:antialiased}
+svg{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
+svg.drag{cursor:grabbing}
+#tip{position:absolute;pointer-events:none;padding:7px 10px;border-radius:7px;font-size:12px;line-height:1.45;white-space:nowrap;opacity:0;transition:opacity .12s;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+#ui{position:absolute;right:12px;bottom:12px;display:flex;gap:6px}
+#ui span{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;user-select:none}
+#msg{position:absolute;left:12px;bottom:12px;font-size:11px}
+</style>
+</head>
+<body>
+<svg id="g"></svg>
+<div id="tip"></div>
+<div id="ui"><span id="zo">−</span><span id="zi">+</span><span id="sp" title="Rotación">⏸</span></div>
+<div id="msg">Arrastra para girar · rueda para acercar</div>
+<script>
+const TH = {
+  light: { bg: '#FAFAFC', glow: 'rgba(16,35,240,.10)', ocean: '#E8EBF6', land: '#FFFFFF', border: '#D4D8E4', grat: '#DCE0EC', pt: '#1023F0', sel: '#D6402B', ink: '#0B0F2A', mute: '#5A6075', card: '#FFFFFF', line: '#E2E4EC' },
+  dark: { bg: '#080A13', glow: 'rgba(127,139,255,.18)', ocean: '#121527', land: '#262B44', border: '#363B56', grat: '#1B1F35', pt: '#7F8BFF', sel: '#FF6E5A', ink: '#E6E8F2', mute: '#9095AE', card: '#151829', line: '#23273C' }
+};
+const P = new URLSearchParams(location.search);
+let theme = TH[P.get('theme')] ? P.get('theme') : 'light';
+let points = [], selId = null, hoverId = null, land = null, borders = null;
+let rot = [95, -18, 0], scaleK = 1, spin = true, lastUser = 0, dragging = false;
+const svg = d3.select('#g'), tip = document.getElementById('tip');
+const defs = svg.append('defs');
+const grad = defs.append('radialGradient').attr('id', 'gl');
+grad.append('stop').attr('offset', '70%').attr('stop-opacity', 1);
+grad.append('stop').attr('offset', '100%').attr('stop-opacity', 0);
+const gGlow = svg.append('circle').attr('fill', 'url(#gl)');
+const gSphere = svg.append('path');
+const gGrat = svg.append('path').attr('fill', 'none').attr('stroke-width', .6);
+const gLand = svg.append('path');
+const gBord = svg.append('path').attr('fill', 'none').attr('stroke-width', .5);
+const gPts = svg.append('g');
+const proj = d3.geoOrthographic().clipAngle(90).precision(.4);
+const path = d3.geoPath(proj);
+const grat = d3.geoGraticule10();
+
+function size() {
+  const w = innerWidth, h = innerHeight, r = Math.max(60, Math.min(w, h) / 2 - 28) * 0.9 * scaleK;
+  proj.translate([w / 2, h / 2]).scale(r);
+  gGlow.attr('cx', w / 2).attr('cy', h / 2).attr('r', r * 1.12);
+}
+function applyTheme() {
+  const t = TH[theme];
+  document.body.style.background = t.bg;
+  grad.selectAll('stop').attr('stop-color', t.glow);
+  gSphere.attr('fill', t.ocean);
+  gGrat.attr('stroke', t.grat);
+  gLand.attr('fill', t.land);
+  gBord.attr('stroke', t.border);
+  Object.assign(tip.style, { background: t.card, color: t.ink, border: '1px solid ' + t.line });
+  document.querySelectorAll('#ui span').forEach(s => Object.assign(s.style, { background: t.card, color: t.ink, border: '1px solid ' + t.line }));
+  document.getElementById('msg').style.color = t.mute;
+}
+function render() {
+  proj.rotate(rot);
+  gSphere.attr('d', path({ type: 'Sphere' }));
+  gGrat.attr('d', path(grat));
+  if (land) { gLand.attr('d', path(land)); gBord.attr('d', path(borders)); }
+  const t = TH[theme], c = [-rot[0], -rot[1]];
+  const sel = gPts.selectAll('g.p').data(points, d => d.id);
+  const ent = sel.enter().append('g').attr('class', 'p').style('cursor', 'pointer');
+  ent.append('circle').attr('class', 'halo');
+  ent.append('circle').attr('class', 'dot');
+  ent.on('pointerenter', (e, d) => { hoverId = d.id; showTip(e, d); render(); })
+     .on('pointermove', (e, d) => showTip(e, d))
+     .on('pointerleave', () => { hoverId = null; tip.style.opacity = 0; render(); })
+     .on('pointerdown', e => e.stopPropagation())
+     .on('click', (e, d) => { selId = d.id; parent.postMessage({ type: 'firma-globe-pick', id: d.id }, '*'); focus(d); });
+  sel.exit().remove();
+  gPts.selectAll('g.p').each(function (d) {
+    const vis = d3.geoDistance([d.lon, d.lat], c) < Math.PI / 2 - .02;
+    const [x, y] = proj([d.lon, d.lat]);
+    const on = d.id === selId, hv = d.id === hoverId, r = (3 + Math.sqrt(d.n || 1) * 1.6) * (hv ? 1.3 : 1);
+    const g = d3.select(this).style('display', vis ? null : 'none').attr('transform', `translate(${x},${y})`);
+    g.select('.halo').attr('r', on ? r + 7 : r + 3).attr('fill', on ? t.sel : t.pt).attr('opacity', on ? .22 : .16);
+    g.select('.dot').attr('r', r).attr('fill', on ? t.sel : t.pt).attr('stroke', t.land).attr('stroke-width', 1.2);
+  });
+}
+function showTip(e, d) {
+  tip.innerHTML = `<b>${d.label}</b><br><span style="opacity:.7">${d.geo}</span><br><span style="opacity:.7">${d.lat.toFixed(2)}, ${d.lon.toFixed(2)}</span>`;
+  const w = tip.offsetWidth;
+  tip.style.left = Math.min(innerWidth - w - 8, e.clientX + 14) + 'px';
+  tip.style.top = (e.clientY + 14) + 'px';
+  tip.style.opacity = 1;
+}
+let anim = null;
+function focus(d) {
+  const from = rot.slice(), to = [-d.lon, -d.lat * .8, 0];
+  let dl = to[0] - from[0]; dl = ((dl + 540) % 360) - 180; to[0] = from[0] + dl;
+  const t0 = performance.now(); lastUser = t0 + 6000;
+  anim = t => { const k = Math.min(1, (t - t0) / 900), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; rot = [from[0] + (to[0] - from[0]) * e, from[1] + (to[1] - from[1]) * e, 0]; if (k >= 1) anim = null; };
+}
+function loop(t) {
+  requestAnimationFrame(loop);
+  if (anim) anim(t);
+  else if (spin && !dragging && t > lastUser + 2500) rot[0] += .07;
+  render();
+}
+let start = null;
+svg.on('pointerdown', e => { dragging = true; svg.classed('drag', true); start = { x: e.clientX, y: e.clientY, r: rot.slice() }; anim = null; svg.node().setPointerCapture(e.pointerId); })
+   .on('pointermove', e => { if (!dragging) return; const k = 75 / proj.scale() * 2.4; rot = [start.r[0] + (e.clientX - start.x) * k, Math.max(-80, Math.min(80, start.r[1] - (e.clientY - start.y) * k)), 0]; })
+   .on('pointerup pointercancel', () => { dragging = false; svg.classed('drag', false); lastUser = performance.now(); });
+svg.node().addEventListener('wheel', e => { e.preventDefault(); scaleK = Math.max(.7, Math.min(3, scaleK * (e.deltaY < 0 ? 1.1 : 1 / 1.1))); size(); }, { passive: false });
+document.getElementById('zi').onclick = () => { scaleK = Math.min(3, scaleK * 1.25); size(); };
+document.getElementById('zo').onclick = () => { scaleK = Math.max(.7, scaleK / 1.25); size(); };
+const sp = document.getElementById('sp');
+sp.onclick = () => { spin = !spin; sp.textContent = spin ? '⏸' : '▶'; };
+addEventListener('resize', size);
+addEventListener('message', e => {
+  const m = e.data || {};
+  if (m.type === 'firma-globe-points') { points = m.points || []; if (m.theme && TH[m.theme]) { theme = m.theme; applyTheme(); } if (!points.find(p => p.id === selId)) selId = null; }
+  if (m.type === 'firma-globe-theme' && TH[m.theme]) { theme = m.theme; applyTheme(); }
+  if (m.type === 'firma-globe-focus') { const d = points.find(p => p.id === m.id); selId = m.id; if (d) focus(d); }
+});
+size(); applyTheme(); requestAnimationFrame(loop);
+fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json').then(r => r.json()).then(topo => {
+  land = topojson.feature(topo, topo.objects.countries);
+  borders = topojson.mesh(topo, topo.objects.countries, (a, b) => a !== b);
+});
+parent.postMessage({ type: 'firma-globe-ready' }, '*');
+</script>
+</body>
+</html>

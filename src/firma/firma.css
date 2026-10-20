@@ -1,0 +1,16 @@
+@font-face{font-family:'Paper Mono';src:url('/fonts/PaperMono-VF.woff2') format('woff2');font-weight:100 800;font-display:swap}
+:root{--bg:#FFFFFF;--bg2:#FAFAFC;--soft:#F4F5F8;--line:#E2E4EC;--line2:#C5C9D6;--ink:#0B0F2A;--ink2:#3A4058;--mute:#5A6075;--acc:#1023F0;--accSoft:#EEF0FF;--onAcc:#FFFFFF;--act:#0E8A5F;--rep:#D6402B;--actSoft:#E6F4EE;--repSoft:#FDECEA;--logoBg:transparent;--logoBlend:multiply;--t2:#7A3FD6;--t3:#B5651D;--dual:#9A5B00;--dualSoft:#FBF0E0;--shadow:rgba(11,15,42,.12);--hero:radial-gradient(48% 70% at 80% 32%,rgba(16,35,240,.11) 0%,rgba(16,35,240,0) 70%),radial-gradient(38% 55% at 8% 100%,rgba(16,35,240,.06) 0%,rgba(16,35,240,0) 70%),#FFFFFF;--heroLine:#E2E4EC;--heroMute:#5A6075;--heroTile:#F4F5F8;--heroSearch:#FFFFFF;--heroSearchBd:#0B0F2A;--heroNet:16,35,240;color-scheme:light}
+:root[data-theme=dark]{--bg:#0B0D18;--bg2:#080A13;--soft:#151829;--line:#23273C;--line2:#363B56;--ink:#E6E8F2;--ink2:#C3C7D8;--mute:#9095AE;--acc:#7F8BFF;--accSoft:#1A1F45;--onAcc:#0B0D18;--act:#3DC48F;--rep:#FF6E5A;--actSoft:#11302A;--repSoft:#3A1C18;--logoBg:#FFFFFF;--logoBlend:normal;--t2:#B392FF;--t3:#E8A15C;--dual:#F0B45C;--dualSoft:#3A2A12;--shadow:rgba(0,0,0,.55);--hero:radial-gradient(48% 70% at 80% 30%,rgba(127,139,255,.16) 0%,rgba(127,139,255,0) 70%),radial-gradient(38% 55% at 8% 100%,rgba(127,139,255,.07) 0%,rgba(127,139,255,0) 70%),#0B0D18;--heroLine:#23273C;--heroMute:#9095AE;--heroTile:#151829;--heroSearch:#151829;--heroSearchBd:#C3C7D8;--heroNet:127,139,255;color-scheme:dark}
+html,body{margin:0;height:100%;background:var(--bg);font-family:'Paper Mono',ui-monospace,monospace;color:var(--ink);-webkit-font-smoothing:antialiased}
+a{color:var(--acc);text-decoration:none}a:hover{color:var(--ink);text-decoration:underline}
+*{box-sizing:border-box}
+input{font-family:inherit;color:var(--ink)}
+input::placeholder{color:var(--mute)}
+
+/* estados :hover del prototipo (style-hover) */
+.scp0:hover{background:var(--soft) !important}
+.scp1:hover{border-color:var(--ink) !important}
+.scp2:hover{background:var(--accSoft) !important;color:var(--acc) !important}
+.scp3:hover{background:var(--heroTile) !important}
+.scp4:hover{color:var(--acc) !important}
+.scp5:hover{color:var(--ink) !important}

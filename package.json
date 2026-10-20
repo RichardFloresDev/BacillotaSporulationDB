@@ -1,0 +1,21 @@
+{
+  "name": "bacillota-sporulation-db",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "convert": "node scripts/convert-dc.cjs design/FIRMA.dc.html src/firma"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "htmlparser2": "^9.1.0",
+    "vite": "^5.4.11"
+  }
+}
