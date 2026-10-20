@@ -409,10 +409,10 @@ input::placeholder{color:var(--mute)}
         <svg ref="{{ mapRef }}" viewBox="{{ mViewBox }}" onPointerDown="{{ mDown }}" onPointerMove="{{ mMove }}" onPointerUp="{{ mUp }}" style="position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none;touch-action:none;cursor:{{ mCursor }};font-family:'Paper Mono',monospace">
           <defs>
             <filter id="cloudM" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="22"></feGaussianBlur></filter>
-            <marker id="mkI" viewBox="0 -5 10 10" refX="9" refY="0" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,-4 L9,0 L0,4 Z" style="fill:var(--ink)"></path></marker>
-            <marker id="mkA" viewBox="0 -5 10 10" refX="9" refY="0" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,-4 L9,0 L0,4 Z" style="fill:var(--acc)"></path></marker>
+            <marker id="mkI" viewBox="0 -5 10 10" refX="1" refY="0" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,-4 L9,0 L0,4 Z" style="fill:var(--ink)"></path></marker>
+            <marker id="mkA" viewBox="0 -5 10 10" refX="1" refY="0" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,-4 L9,0 L0,4 Z" style="fill:var(--acc)"></path></marker>
             <marker id="mkIs" viewBox="0 -5 10 10" refX="1" refY="0" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0,-4 L9,0 L0,4 Z" style="fill:var(--ink)"></path></marker>
-            <marker id="mkO" viewBox="0 -5 10 10" refX="9" refY="0" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,-4 L9,0 L0,4 Z" style="fill:var(--bg2);stroke:var(--mute);stroke-width:1.2"></path></marker>
+            <marker id="mkO" viewBox="0 -5 10 10" refX="1" refY="0" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,-4 L9,0 L0,4 Z" style="fill:var(--bg2);stroke:var(--mute);stroke-width:1.2"></path></marker>
           </defs>
           <g transform="{{ mT }}">
             <sc-for list="{{ mGroups }}" as="g" hint-placeholder-count="0">
@@ -1457,8 +1457,8 @@ class Component extends DCLogic {
     edges.forEach((e, idx) => {
       const A = M.N[e.a], B = M.N[e.b], onCircle = e.pw === 'tca';
       let dEdge, mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2;
-      if (onCircle) { const aA = Math.atan2(A[1] - M.cy, A[0] - M.cx), aB0 = Math.atan2(B[1] - M.cy, B[0] - M.cx), aB = aB0 < aA ? aB0 + Math.PI * 2 : aB0, dl = 8 / M.r, p = a => (M.cx + M.r * Math.cos(a)).toFixed(1) + ',' + (M.cy + M.r * Math.sin(a)).toFixed(1); dEdge = 'M' + p(aA + dl) + ' A' + M.r + ',' + M.r + ' 0 0 1 ' + p(aB - dl - 0.012); const am = (aA + aB) / 2; mx = M.cx + M.r * Math.cos(am); my = M.cy + M.r * Math.sin(am); }
-      else dEdge = this.edgePath(A[0], A[1], B[0], B[1], { style: 'taxi', ra: 7, rb: 8 });
+      if (onCircle) { const aA = Math.atan2(A[1] - M.cy, A[0] - M.cx), aB0 = Math.atan2(B[1] - M.cy, B[0] - M.cx), aB = aB0 < aA ? aB0 + Math.PI * 2 : aB0, dl = 8 / M.r, p = a => (M.cx + M.r * Math.cos(a)).toFixed(1) + ',' + (M.cy + M.r * Math.sin(a)).toFixed(1); dEdge = 'M' + p(aA + dl) + ' A' + M.r + ',' + M.r + ' 0 0 1 ' + p(aB - dl - 6.4 / M.r - 0.012); const am = (aA + aB) / 2; mx = M.cx + M.r * Math.cos(am); my = M.cy + M.r * Math.sin(am); }
+      else dEdge = this.edgePath(A[0], A[1], B[0], B[1], { style: 'taxi', ra: e.bi ? 13.5 : 7, rb: 14.5 });
       const sel = e.i != null && e.pw === s.pw && s.step === e.i, hit = focusTf && e.regs.some(r => r[0] === focusTf);
       const op = focusTf ? (hit ? 1 : 0.28) : (e.pw === s.pw ? 1 : 0.42);
       mEdges.push({ flow: sel || !!hit, d: dEdge, st: sel ? 'var(--acc)' : 'var(--ink)', w: sel ? 2 : 1.3, dash: 'none', op, mEnd: sel ? 'url(#mkA)' : 'url(#mkI)', mStart: e.bi ? 'url(#mkIs)' : 'none' });
@@ -1475,11 +1475,11 @@ class Component extends DCLogic {
     M.C2.forEach(c => {
       const A = M.N[c.a], B = M.N[c.b], op = focusTf ? 0.28 : (c.pw === s.pw ? 1 : 0.42);
       if (c.arc) mEdges.push({ d: 'M' + A[0].toFixed(1) + ',' + A[1].toFixed(1) + ' A' + M.r + ',' + M.r + ' 0 0 1 ' + B[0].toFixed(1) + ',' + B[1].toFixed(1), st: 'var(--mute)', w: 1.2, dash: '4 4', op, mEnd: 'none', mStart: 'none' });
-      else mEdges.push({ d: this.edgePath(A[0], A[1], B[0], B[1], { style: 'taxi', ra: 7, rb: 8 }), st: 'var(--mute)', w: 1.2, dash: '5 4', op, mEnd: 'url(#mkI)', mStart: 'none' });
+      else mEdges.push({ d: this.edgePath(A[0], A[1], B[0], B[1], { style: 'taxi', ra: 7, rb: 14.5 }), st: 'var(--mute)', w: 1.2, dash: '5 4', op, mEnd: 'url(#mkI)', mStart: 'none' });
     });
     const mLinks = M.L.map(l => {
       const A = M.N[l.from], w = l.label.length * 6.3 + 24, rx = l.x, ry = l.y - 12, cxr = rx + w / 2, cyr = l.y;
-      const Hd = Math.abs(cxr - A[0]) >= Math.abs(cyr - A[1]), lpath = this.edgePath(A[0], A[1], cxr, cyr, { style: 'taxi', ra: 7, rb: Hd ? w / 2 + 1 : 13 });
+      const Hd = Math.abs(cxr - A[0]) >= Math.abs(cyr - A[1]), lpath = this.edgePath(A[0], A[1], cxr, cyr, { style: 'taxi', ra: 7, rb: Hd ? w / 2 + 8 : 20 });
       txt(cxr, cyr + 4, l.label, { fs: 11, c: 'var(--ink2)', op: inPw.has(l.from) && !focusTf ? 1 : 0.6 });
       return { d: lpath, x: rx, y: ry, w, st: 'var(--line2)', cur: 'pointer', onDown: ev => ev.stopPropagation(), onClick: () => window.open('https://www.kegg.jp/pathway/' + l.kegg, '_blank') };
     });

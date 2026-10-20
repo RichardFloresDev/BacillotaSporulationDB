@@ -1258,11 +1258,11 @@ export default function View(v) {
                       <feGaussianBlur stdDeviation={"22"}></feGaussianBlur>
                     </filter>
                     {"\n            "}
-                    <marker id={"mkI"} viewBox={"0 -5 10 10"} refX={"9"} refY={"0"} markerWidth={"8"} markerHeight={"8"} markerUnits={"userSpaceOnUse"} orient={"auto"}>
+                    <marker id={"mkI"} viewBox={"0 -5 10 10"} refX={"1"} refY={"0"} markerWidth={"8"} markerHeight={"8"} markerUnits={"userSpaceOnUse"} orient={"auto"}>
                       <path d={"M0,-4 L9,0 L0,4 Z"} style={S("fill:var(--ink)")}></path>
                     </marker>
                     {"\n            "}
-                    <marker id={"mkA"} viewBox={"0 -5 10 10"} refX={"9"} refY={"0"} markerWidth={"8"} markerHeight={"8"} markerUnits={"userSpaceOnUse"} orient={"auto"}>
+                    <marker id={"mkA"} viewBox={"0 -5 10 10"} refX={"1"} refY={"0"} markerWidth={"8"} markerHeight={"8"} markerUnits={"userSpaceOnUse"} orient={"auto"}>
                       <path d={"M0,-4 L9,0 L0,4 Z"} style={S("fill:var(--acc)")}></path>
                     </marker>
                     {"\n            "}
@@ -1270,7 +1270,7 @@ export default function View(v) {
                       <path d={"M0,-4 L9,0 L0,4 Z"} style={S("fill:var(--ink)")}></path>
                     </marker>
                     {"\n            "}
-                    <marker id={"mkO"} viewBox={"0 -5 10 10"} refX={"9"} refY={"0"} markerWidth={"9"} markerHeight={"9"} markerUnits={"userSpaceOnUse"} orient={"auto"}>
+                    <marker id={"mkO"} viewBox={"0 -5 10 10"} refX={"1"} refY={"0"} markerWidth={"9"} markerHeight={"9"} markerUnits={"userSpaceOnUse"} orient={"auto"}>
                       <path d={"M0,-4 L9,0 L0,4 Z"} style={S("fill:var(--bg2);stroke:var(--mute);stroke-width:1.2")}></path>
                     </marker>
                     {"\n          "}
